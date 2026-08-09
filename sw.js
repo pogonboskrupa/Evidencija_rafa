@@ -5,7 +5,7 @@
 // Aplikacija je mala (nekoliko desetina kB), tako da je cijena ovog pristupa
 // zanemariva, a ponašanje predvidivo: online uvijek svježe, offline iz keša.
 
-const VERSION = 'v4';
+const VERSION = 'v5';
 const CACHE = `evidencija-rafa-${VERSION}`;
 const NETWORK_TIMEOUT_MS = 4000;
 

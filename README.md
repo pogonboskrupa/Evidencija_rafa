@@ -2,7 +2,7 @@
 
 Web aplikacija za godišnju evidenciju rada u šumarstvu: doznaka stabala, vlake, teren, kiša, kancelarija, godišnji odmor, bolovanje, praznik i plaćeno odsustvo.
 
-Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi u potpunosti u pregledniku — svi podaci se spremaju lokalno (`localStorage`) na uređaju korisnika.
+Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi u potpunosti u pregledniku — svi podaci se spremaju lokalno (`localStorage`) na uređaju korisnika. Radi i kada se `index.html` otvori direktno dvoklikom (bez servera) — vidi napomenu u odjeljku "Pokretanje lokalno".
 
 ## Značajke
 
@@ -23,7 +23,9 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
 
 ## Pokretanje lokalno
 
-Aplikacija ne zahtijeva build alate. Dovoljno je poslužiti datoteke statičkim serverom, npr.:
+Aplikacija ne zahtijeva build alate niti server — datoteke su obične skripte (ne ES moduli), pa je dovoljno **dvoklikom otvoriti `index.html`** u pregledniku.
+
+Ako ipak želite poslužiti aplikaciju preko lokalnog servera (npr. radi testiranja PWA instalacije, koja zahtijeva `http://localhost` ili HTTPS):
 
 ```bash
 python3 -m http.server 8080

@@ -1,4 +1,10 @@
-import {
+// Obična skripta (bez ES modula) — vidi napomenu u storage.js. Skripte se
+// učitavaju redom (storage, stats, forest, pwa, keypad, pa app), pa su ovi
+// namespace objekti već dostupni na window kad se ovaj kod izvrši. Sve je
+// omotano u IIFE da desetine internih imena (state, $, $$, ...) ne završe
+// kao globalne varijable na window.
+(function () {
+const {
   DAY_TYPES,
   RADNI_SUBTIPOVI,
   ODSUSTVO_TIPOVI,
@@ -9,16 +15,15 @@ import {
   getSession,
   clearSession,
   getCurrentUser,
-  saveUser,
   setRecord,
   deleteUser,
   getVacationSettings,
   saveVacationSettings,
-} from './storage.js';
-import { computeYearStats } from './stats.js';
-import { renderForestBackdrop } from './forest.js';
-import { initPWA } from './pwa.js';
-import { createPinController } from './keypad.js';
+} = window.Storage;
+const { computeYearStats } = window.Stats;
+const { renderForestBackdrop } = window.Forest;
+const { initPWA } = window.PWA;
+const { createPinController } = window.Keypad;
 
 const MJESECI = [
   'januar', 'februar', 'mart', 'april', 'maj', 'juni',
@@ -882,3 +887,4 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+})();
