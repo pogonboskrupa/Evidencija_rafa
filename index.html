@@ -105,20 +105,13 @@
               <path d="M24 4 L34 20 L28 20 L37 33 L29 33 L29 42 L19 42 L19 33 L11 33 L20 20 L14 20 Z" fill="currentColor" />
             </svg>
           </span>
-          Evidencija rada
+          <span class="brand-text">Evidencija rada</span>
         </div>
         <nav class="nav-tabs">
           <button data-view="entry" class="active" type="button">Unos dana</button>
           <button data-view="overview" type="button">Godišnji pregled</button>
           <button data-view="settings" type="button">Postavke</button>
         </nav>
-        <div class="user-box">
-          <button class="btn btn-secondary install-btn" data-install-btn type="button" hidden>
-            Instaliraj
-          </button>
-          <span class="name" id="userNameLabel"></span>
-          <button id="logoutBtn" class="btn btn-ghost">Odjava</button>
-        </div>
       </header>
 
       <main>
@@ -199,8 +192,30 @@
 
           <div class="panel">
             <h3>Račun</h3>
-            <p class="form-hint" style="margin:6px 0 14px;">Prijavljeni ste kao <strong id="settingsUserLabel"></strong>.</p>
-            <button id="deleteAccountBtn" class="btn btn-danger">Obriši moj račun i sve podatke</button>
+
+            <div class="account-row">
+              <div class="account-user">
+                <span class="account-avatar" id="settingsAvatar" aria-hidden="true"></span>
+                <div>
+                  <div class="account-name" id="settingsUserName"></div>
+                  <div class="account-handle" id="settingsUserLabel"></div>
+                </div>
+              </div>
+              <div class="account-actions">
+                <button class="btn btn-secondary install-btn" data-install-btn type="button" hidden>
+                  Instaliraj aplikaciju
+                </button>
+                <button id="logoutBtn" class="btn btn-secondary">Odjava</button>
+              </div>
+            </div>
+
+            <div class="danger-zone">
+              <div>
+                <div class="danger-title">Brisanje računa</div>
+                <p class="form-hint">Trajno uklanja korisnika i sve unose s ovog uređaja.</p>
+              </div>
+              <button id="deleteAccountBtn" class="btn btn-danger">Obriši račun</button>
+            </div>
           </div>
         </section>
       </main>

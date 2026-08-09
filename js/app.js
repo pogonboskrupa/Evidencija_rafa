@@ -129,12 +129,23 @@ function initAuthScreen() {
   });
 }
 
+function initials(name) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0] || '')
+    .join('')
+    .toUpperCase();
+}
+
 function enterApp(user) {
   state.user = user;
   $('#authScreen').hidden = true;
   $('#mainApp').hidden = false;
-  $('#userNameLabel').textContent = user.fullName;
-  $('#settingsUserLabel').textContent = `${user.fullName} (${user.username})`;
+  $('#settingsAvatar').textContent = initials(user.fullName);
+  $('#settingsUserName').textContent = user.fullName;
+  $('#settingsUserLabel').textContent = `@${user.username}`;
   renderLegends();
   switchView('entry');
   renderEntryView();
