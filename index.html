@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evidencija rada — Doznaka stabala</title>
+  <meta name="description" content="Godišnja evidencija rada za doznaku stabala, vlake, teren i ostale radne dane." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌲</text></svg>" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="pineTree" viewBox="0 0 40 62">
+        <rect x="17" y="50" width="6" height="11" fill="#6b4a2c" />
+        <path d="M2 51 L38 51 L20 33 Z" fill="currentColor" />
+        <path d="M6 36 L34 36 L20 18 Z" fill="currentColor" />
+        <path d="M10 21 L30 21 L20 3 Z" fill="currentColor" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <div id="app">
+
+    <!-- ================= AUTH SCREEN ================= -->
+    <section id="authScreen" class="auth-screen">
+      <div class="forest-strip" style="width:100%; max-width:520px; margin-bottom:-2px;"></div>
+      <div class="auth-hero">
+        <div class="logo">🌲</div>
+        <h1>Evidencija rada</h1>
+        <p>Doznaka stabala · Vlake · Teren · Šumarska evidencija</p>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button id="tabLogin" class="active" type="button">Prijava</button>
+          <button id="tabRegister" type="button">Registracija</button>
+        </div>
+
+        <div id="authError" class="form-error" hidden></div>
+
+        <!-- LOGIN -->
+        <form id="loginForm">
+          <div class="field">
+            <label for="loginUsername">Korisničko ime</label>
+            <input id="loginUsername" name="username" autocomplete="username" required />
+          </div>
+          <div class="field">
+            <label for="loginPin">PIN</label>
+            <input id="loginPin" name="pin" type="password" inputmode="numeric" pattern="\d*" maxlength="6" autocomplete="current-password" required />
+          </div>
+          <label class="checkbox-row">
+            <input id="loginRemember" type="checkbox" checked />
+            Zapamti me na ovom uređaju
+          </label>
+          <button type="submit" class="btn btn-primary">Prijavi se</button>
+        </form>
+
+        <!-- REGISTER -->
+        <form id="registerForm" hidden>
+          <div class="field">
+            <label for="regFullName">Ime i prezime</label>
+            <input id="regFullName" name="fullName" autocomplete="name" required />
+          </div>
+          <div class="field">
+            <label for="regUsername">Korisničko ime</label>
+            <input id="regUsername" name="username" autocomplete="username" required />
+          </div>
+          <div class="field">
+            <label for="regPin">PIN (4–6 znamenki)</label>
+            <input id="regPin" name="pin" type="password" inputmode="numeric" pattern="\d*" maxlength="6" autocomplete="new-password" required />
+          </div>
+          <div class="field">
+            <label for="regPinConfirm">Potvrdi PIN</label>
+            <input id="regPinConfirm" name="pinConfirm" type="password" inputmode="numeric" pattern="\d*" maxlength="6" autocomplete="new-password" required />
+          </div>
+          <label class="checkbox-row">
+            <input id="regRemember" type="checkbox" checked />
+            Zapamti me na ovom uređaju
+          </label>
+          <button type="submit" class="btn btn-primary">Registriraj se</button>
+        </form>
+      </div>
+      <div class="forest-strip flip" style="width:100%; max-width:520px; margin-top:-2px;"></div>
+    </section>
+
+    <!-- ================= MAIN APP ================= -->
+    <div id="mainApp" hidden>
+      <header class="topbar">
+        <div class="brand"><span class="logo">🌲</span> Evidencija rada</div>
+        <nav class="nav-tabs">
+          <button data-view="entry" class="active" type="button">Unos dana</button>
+          <button data-view="overview" type="button">Godišnji pregled</button>
+          <button data-view="settings" type="button">Postavke</button>
+        </nav>
+        <div class="user-box">
+          <span>👤 <span class="name" id="userNameLabel"></span></span>
+          <button id="logoutBtn" class="btn btn-ghost">Odjava</button>
+        </div>
+      </header>
+
+      <main>
+        <!-- ---- UNOS DANA (mjesečni kalendar) ---- -->
+        <section id="view-entry" class="view">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="month-nav">
+                <button id="prevMonth" type="button">‹</button>
+                <span class="month-label" id="monthLabel"></span>
+                <button id="nextMonth" type="button">›</button>
+              </div>
+              <button id="todayBtn" class="btn btn-secondary">Danas</button>
+            </div>
+            <div class="legend" id="entryLegend"></div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+          </div>
+        </section>
+
+        <!-- ---- GODIŠNJI PREGLED ---- -->
+        <section id="view-overview" class="view" hidden>
+          <div class="panel">
+            <div class="year-header">
+              <div class="month-nav">
+                <button id="prevYear" type="button">‹</button>
+                <span class="month-label" id="yearLabel"></span>
+                <button id="nextYear" type="button">›</button>
+              </div>
+              <button id="printBtn" class="btn btn-secondary no-print">🖨️ Ispis / PDF</button>
+            </div>
+            <div class="legend" id="overviewLegend"></div>
+            <div class="stats-grid" id="statsGrid"></div>
+          </div>
+
+          <div class="panel">
+            <h3 style="margin-bottom:14px;">Pregled cijele godine</h3>
+            <div class="year-grid" id="yearGrid"></div>
+          </div>
+        </section>
+
+        <!-- ---- POSTAVKE ---- -->
+        <section id="view-settings" class="view" hidden>
+          <div class="panel">
+            <h3>Godišnji odmor</h3>
+            <p class="form-hint" style="margin-bottom:16px;">Postavite broj dana godišnjeg odmora i datum od kojeg se godišnji odmor može koristiti.</p>
+            <form id="settingsForm" class="settings-form">
+              <div class="field">
+                <label for="settingsYear">Godina</label>
+                <select id="settingsYear"></select>
+              </div>
+              <div class="field">
+                <label for="vacationDays">Broj dana godišnjeg odmora</label>
+                <input id="vacationDays" type="number" min="0" max="60" required />
+              </div>
+              <div class="field">
+                <label for="vacationFrom">Koristi se od</label>
+                <input id="vacationFrom" type="date" required />
+              </div>
+              <div style="align-self:end;">
+                <button type="submit" class="btn btn-primary">Spremi postavke</button>
+              </div>
+            </form>
+            <div id="settingsSaved" class="settings-note" style="margin-top:14px;" hidden>Postavke su spremljene.</div>
+          </div>
+
+          <div class="panel">
+            <h3>Račun</h3>
+            <p class="form-hint" style="margin:6px 0 14px;">Prijavljeni ste kao <strong id="settingsUserLabel"></strong>.</p>
+            <button id="deleteAccountBtn" class="btn btn-danger">Obriši moj račun i sve podatke</button>
+          </div>
+        </section>
+      </main>
+
+      <div class="forest-strip flip"></div>
+      <footer class="app-footer">Evidencija rada · doznaka stabala za sječu · svi podaci pohranjeni lokalno u vašem pregledniku</footer>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: UNOS DANA ================= -->
+  <div id="dayModalOverlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <button class="modal-close btn btn-ghost" id="modalCloseBtn" type="button">✕</button>
+      <h3 id="modalDateLabel">Datum</h3>
+      <p class="modal-sub">Odaberite vrstu dana</p>
+
+      <div class="type-group-title">Radni dan</div>
+      <div class="type-options" id="radniOptions"></div>
+
+      <div class="type-group-title">Odsustvo</div>
+      <div class="type-options" id="odsustvoOptions"></div>
+
+      <div id="extraFields"></div>
+
+      <div class="modal-actions">
+        <button id="clearDayBtn" class="btn btn-ghost" type="button">Obriši unos</button>
+        <button id="saveDayBtn" class="btn btn-primary" type="button">Spremi</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
