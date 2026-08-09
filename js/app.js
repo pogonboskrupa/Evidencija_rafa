@@ -4,6 +4,7 @@ import {
   ODSUSTVO_TIPOVI,
   registerUser,
   verifyLogin,
+  usernameExists,
   setSession,
   getSession,
   clearSession,
@@ -17,6 +18,7 @@ import {
 import { computeYearStats } from './stats.js';
 import { renderForestBackdrop } from './forest.js';
 import { initPWA } from './pwa.js';
+import { createPinController } from './keypad.js';
 
 const MJESECI = [
   'januar', 'februar', 'mart', 'april', 'maj', 'juni',
@@ -52,6 +54,10 @@ function mondayIndex(jsDay) {
 
 /* ==================== AUTH ==================== */
 
+// Postavljeno u initAuthScreen(); poziva logout() da vrati ekran prijave na
+// karticu "Prijava" i PIN tipkovnice u početno stanje.
+let resetAuthUI = () => {};
+
 function showAuthError(msg) {
   const el = $('#authError');
   el.textContent = msg;
@@ -64,12 +70,133 @@ function initAuthScreen() {
   const loginForm = $('#loginForm');
   const registerForm = $('#registerForm');
 
+  // ---------- PIN tipkovnica: prijava ----------
+  const loginPin = createPinController({
+    dotsEl: $('#loginPinDots'),
+    keypadEl: $('#loginKeypad'),
+    statusEl: $('#loginPinStatus'),
+    onComplete: async (pin, ctl) => {
+      showAuthError('');
+      ctl.setLocked(true);
+      ctl.setStatus('Provjera…');
+      try {
+        const user = await verifyLogin($('#loginUsername').value, pin);
+        setSession(user.username, $('#loginRemember').checked);
+        enterApp(user);
+      } catch (err) {
+        ctl.shake();
+        ctl.setStatus(err.message, true);
+        ctl.clearDigits();
+        ctl.setLocked(false);
+      }
+    },
+  });
+
+  // ---------- PIN tipkovnica: registracija (postavi pa potvrdi) ----------
+  let regStep = 'enter'; // 'enter' | 'confirm'
+  let regFirstPin = '';
+
+  function regUsernameTaken() {
+    const username = $('#regUsername').value.trim();
+    return !!username && usernameExists(username);
+  }
+
+  function updateRegGate() {
+    $('#regUsernameError').hidden = !regUsernameTaken();
+    const filled = $('#regFullName').value.trim() && $('#regUsername').value.trim() && !regUsernameTaken();
+    regPin.setLocked(!filled);
+  }
+
+  function setRegStepUI() {
+    $('#regPinLabel').textContent = regStep === 'enter' ? 'Postavite PIN' : 'Potvrdite PIN';
+    $('#regPinBack').hidden = regStep !== 'confirm';
+  }
+
+  function resetRegPin() {
+    regStep = 'enter';
+    regFirstPin = '';
+    setRegStepUI();
+    regPin.reset();
+    updateRegGate();
+  }
+
+  const regPin = createPinController({
+    dotsEl: $('#regPinDots'),
+    keypadEl: $('#regKeypad'),
+    statusEl: $('#regPinStatus'),
+    onComplete: async (pin, ctl) => {
+      if (regStep === 'enter') {
+        regFirstPin = pin;
+        regStep = 'confirm';
+        setRegStepUI();
+        ctl.reset();
+        return;
+      }
+
+      // regStep === 'confirm'
+      if (pin !== regFirstPin) {
+        ctl.shake();
+        ctl.setStatus('PIN-ovi se ne podudaraju, pokušajte ponovo.', true);
+        ctl.clearDigits();
+        return;
+      }
+
+      showAuthError('');
+      ctl.setLocked(true);
+      ctl.setStatus('Registracija…');
+      try {
+        const user = await registerUser({
+          fullName: $('#regFullName').value,
+          username: $('#regUsername').value,
+          pin,
+        });
+        setSession(user.username, $('#regRemember').checked);
+        enterApp(user);
+      } catch (err) {
+        showAuthError(err.message);
+        resetRegPin();
+      }
+    },
+  });
+
+  $('#regFullName').addEventListener('input', updateRegGate);
+  $('#regUsername').addEventListener('input', updateRegGate);
+  $('#regPinBack').addEventListener('click', resetRegPin);
+  updateRegGate();
+
+  // Tipkovnica za prijavu ostaje zaključana dok korisničko ime nije upisano
+  // (bez toga nema submit dugmeta/forme koja bi to inače provjerila).
+  $('#loginUsername').addEventListener('input', () => {
+    loginPin.setLocked(!$('#loginUsername').value.trim());
+  });
+  loginPin.setLocked(true);
+
+  // ---------- Prebacivanje kartica ----------
+  function resetAuthForms() {
+    loginForm.reset();
+    registerForm.reset();
+    loginPin.reset();
+    loginPin.setLocked(!$('#loginUsername').value.trim());
+    resetRegPin();
+    showAuthError('');
+  }
+
+  // Odjava uvijek vraća na karticu "Prijava" (ne ostaje na "Registracija"
+  // ako je korisnik odjavljen dok je ona bila aktivna).
+  resetAuthUI = () => {
+    tabLogin.classList.add('active');
+    tabRegister.classList.remove('active');
+    loginForm.hidden = false;
+    registerForm.hidden = true;
+    resetAuthForms();
+  };
+
   tabLogin.addEventListener('click', () => {
     tabLogin.classList.add('active');
     tabRegister.classList.remove('active');
     loginForm.hidden = false;
     registerForm.hidden = true;
-    showAuthError('');
+    resetAuthForms();
   });
 
   tabRegister.addEventListener('click', () => {
@@ -77,54 +204,23 @@ function initAuthScreen() {
     tabLogin.classList.remove('active');
     registerForm.hidden = false;
     loginForm.hidden = true;
-    showAuthError('');
+    resetAuthForms();
   });
 
-  // Hashiranje PIN-a traje nekoliko stotina milisekundi; dugme se onemogući
-  // kako uzastopni klikovi ne bi pokrenuli prijavu/registraciju više puta.
-  async function withBusyButton(form, label, fn) {
-    const btn = form.querySelector('button[type=submit]');
-    if (btn.disabled) return;
-    const original = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = label;
-    try {
-      await fn();
-    } catch (err) {
-      showAuthError(err.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = original;
-    }
-  }
+  // ---------- Fizička tipkovnica kao alternativa dodiru ----------
+  document.addEventListener('keydown', (e) => {
+    if ($('#authScreen').hidden) return;
+    // Ne presresti unos dok korisnik kuca u tekstualno polje (npr. ime).
+    if (document.activeElement?.tagName === 'INPUT') return;
 
-  loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    showAuthError('');
-    withBusyButton(loginForm, 'Prijava…', async () => {
-      const user = await verifyLogin($('#loginUsername').value, $('#loginPin').value);
-      setSession(user.username, $('#loginRemember').checked);
-      enterApp(user);
-    });
-  });
-
-  registerForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    showAuthError('');
-    const pin = $('#regPin').value;
-    if (pin !== $('#regPinConfirm').value) {
-      showAuthError('PIN-ovi se ne podudaraju.');
-      return;
+    const active = tabLogin.classList.contains('active') ? loginPin : regPin;
+    if (/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+      active.pressDigit(e.key);
+    } else if (e.key === 'Backspace') {
+      e.preventDefault();
+      active.pressBackspace();
     }
-    withBusyButton(registerForm, 'Registracija…', async () => {
-      const user = await registerUser({
-        fullName: $('#regFullName').value,
-        username: $('#regUsername').value,
-        pin,
-      });
-      setSession(user.username, $('#regRemember').checked);
-      enterApp(user);
-    });
   });
 }
 
@@ -161,10 +257,8 @@ function logout() {
   state.modalTasks = [];
   $('#mainApp').hidden = true;
   $('#authScreen').hidden = false;
-  $('#loginForm').reset();
-  $('#registerForm').reset();
+  resetAuthUI();
   $('#loginRemember').checked = true;
-  showAuthError('');
 }
 
 /* ==================== NAV ==================== */

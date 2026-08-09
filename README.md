@@ -6,7 +6,7 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
 
 ## Značajke
 
-- **Registracija i prijava s PIN-om** (4–6 znamenki), uz opciju "Zapamti me" da se ne morate prijavljivati svaki put.
+- **Registracija i prijava s PIN-om** putem prave numeričke tipkovnice (dodirom ili fizičkom tipkovnicom) — bez tekstualnog polja za lozinku. PIN ima fiksno 4 cifre; radnja se pokreće automatski čim je upisana zadnja cifra, bez posebnog dugmeta za potvrdu. Registracija ide u dva koraka (postavi pa potvrdi PIN), s mogućnošću povratka na prvi korak. Uz to, opcija "Zapamti me" da se ne morate prijavljivati svaki put.
 - **Unos radnog dana** — mjesec je prikazan u vidu tabele, dan po dan u redovima (kao dnevnik), unutar skrolabilne liste sa fiksnim zaglavljem; pri otvaranju aplikacije uvijek je prikazan tekući mjesec, a prikaz se automatski pozicionira na današnji dan. Vikend dani (subota, nedjelja) posebno su označeni tamnijom nijansom sive. Klikom na red bira se vrsta dana:
   - Radni dani: **Doznaka stabala**, **Vlake**, **Teren**, **Kiša**, **Kancelarija**
   - Odsustva: **Godišnji odmor**, **Bolovanje**, **Praznik**, **Plaćeno odsustvo**
@@ -58,3 +58,5 @@ Strategija keširanja je "mreža prvo, keš kao rezerva": kada ste online uvijek
 ## Napomena o podacima
 
 Budući da je riječ o potpuno statičkoj aplikaciji bez poslužitelja, svi korisnički računi i unosi spremaju se lokalno u pregledniku (`localStorage`). Podaci nisu dijeljeni između različitih uređaja/preglednika. PIN se prije spremanja hashira (SHA-256 sa solju), no imajte na umu da ovo nije zamjena za pravu poslužiteljsku autentikaciju — prikladno je za osobnu/internu evidenciju.
+
+> **Napomena:** PIN je standardizovan na 4 cifre. Ako je neki nalog ranije napravljen s dužim PIN-om (prije uvođenja tipkovnice), prijava putem tipkovnice za njega neće raditi jer se šalju tačno 4 cifre — u tom slučaju je potrebno obrisati stari nalog i registrovati se ponovo.

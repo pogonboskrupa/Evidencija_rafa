@@ -58,7 +58,7 @@ export function usernameExists(username) {
 export async function registerUser({ username, fullName, pin }) {
   const key = username.trim().toLowerCase();
   if (!key) throw new Error('Unesite korisničko ime.');
-  if (!/^\d{4,6}$/.test(pin)) throw new Error('PIN mora imati 4 do 6 znamenki.');
+  if (!/^\d{4}$/.test(pin)) throw new Error('PIN mora imati 4 znamenke.');
   const db = loadDB();
   if (db.users[key]) throw new Error('Korisničko ime već postoji.');
   const salt = randomHex();

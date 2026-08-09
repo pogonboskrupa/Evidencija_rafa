@@ -49,15 +49,18 @@
             <label for="loginUsername">Korisničko ime</label>
             <input id="loginUsername" name="username" autocomplete="username" required />
           </div>
-          <div class="field">
-            <label for="loginPin">PIN</label>
-            <input id="loginPin" name="pin" type="password" inputmode="numeric" pattern="\d*" maxlength="6" autocomplete="current-password" required />
+
+          <div class="pin-field">
+            <label>PIN</label>
           </div>
+          <div class="pin-dots" id="loginPinDots"></div>
+          <p class="pin-status" id="loginPinStatus"></p>
+          <div class="keypad" id="loginKeypad"></div>
+
           <label class="checkbox-row">
             <input id="loginRemember" type="checkbox" checked />
             Zapamti me na ovom uređaju
           </label>
-          <button type="submit" class="btn btn-primary">Prijavi se</button>
         </form>
 
         <!-- REGISTER -->
@@ -69,20 +72,21 @@
           <div class="field">
             <label for="regUsername">Korisničko ime</label>
             <input id="regUsername" name="username" autocomplete="username" required />
+            <p class="field-error" id="regUsernameError" hidden>Korisničko ime je zauzeto.</p>
           </div>
-          <div class="field">
-            <label for="regPin">PIN (4–6 znamenki)</label>
-            <input id="regPin" name="pin" type="password" inputmode="numeric" pattern="\d*" maxlength="6" autocomplete="new-password" required />
+
+          <div class="pin-field">
+            <label id="regPinLabel">Postavite PIN</label>
+            <button type="button" class="pin-back" id="regPinBack" hidden>‹ Nazad</button>
           </div>
-          <div class="field">
-            <label for="regPinConfirm">Potvrdi PIN</label>
-            <input id="regPinConfirm" name="pinConfirm" type="password" inputmode="numeric" pattern="\d*" maxlength="6" autocomplete="new-password" required />
-          </div>
+          <div class="pin-dots" id="regPinDots"></div>
+          <p class="pin-status" id="regPinStatus"></p>
+          <div class="keypad" id="regKeypad"></div>
+
           <label class="checkbox-row">
             <input id="regRemember" type="checkbox" checked />
             Zapamti me na ovom uređaju
           </label>
-          <button type="submit" class="btn btn-primary">Registruj se</button>
         </form>
       </div>
 

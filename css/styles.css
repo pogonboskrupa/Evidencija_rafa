@@ -268,6 +268,112 @@ input, select { font: inherit; }
   line-height: 1.5;
 }
 
+.field-error {
+  font-size: 12.5px;
+  color: var(--danger);
+  margin: -2px 0 0;
+}
+
+/* ---------- PIN tipkovnica ---------- */
+.pin-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.pin-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.pin-back {
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 2px 4px;
+}
+
+.pin-back:hover { color: var(--primary-dark); }
+
+.pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  padding: 10px 0 4px;
+}
+
+.pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: transparent;
+  transition: transform 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.pin-dot.filled {
+  background: var(--primary);
+  border-color: var(--primary);
+  transform: scale(1.1);
+}
+
+.pin-dots.shake { animation: pinShake 0.36s ease; }
+
+@keyframes pinShake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-5px); }
+  40%, 60% { transform: translateX(5px); }
+}
+
+.pin-status {
+  min-height: 17px;
+  margin: 2px 0 6px;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.pin-status.error { color: var(--danger); }
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 252px;
+  margin: 6px auto 20px;
+}
+
+.keypad-key {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.1s ease, border-color 0.1s ease, transform 0.08s ease;
+}
+
+.keypad-key:hover { border-color: #b6cfaa; background: var(--primary-softer); }
+.keypad-key:active { transform: scale(0.92); background: var(--primary-soft); }
+
+.keypad-key.empty { visibility: hidden; pointer-events: none; }
+.keypad-key.backspace { font-size: 16px; color: var(--text-muted); }
+
+.keypad.is-disabled .keypad-key {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 /* ---------- Dugmad ---------- */
 .btn {
   border: 1px solid transparent;

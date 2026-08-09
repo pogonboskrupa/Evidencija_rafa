@@ -5,7 +5,7 @@
 // Aplikacija je mala (nekoliko desetina kB), tako da je cijena ovog pristupa
 // zanemariva, a ponašanje predvidivo: online uvijek svježe, offline iz keša.
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = `evidencija-rafa-${VERSION}`;
 const NETWORK_TIMEOUT_MS = 4000;
 
@@ -20,6 +20,7 @@ const SHELL = [
   './js/stats.js',
   './js/forest.js',
   './js/pwa.js',
+  './js/keypad.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
