@@ -9,24 +9,18 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <defs>
-      <symbol id="pineTree" viewBox="0 0 40 62">
-        <rect x="17" y="50" width="6" height="11" fill="#6b4a2c" />
-        <path d="M2 51 L38 51 L20 33 Z" fill="currentColor" />
-        <path d="M6 36 L34 36 L20 18 Z" fill="currentColor" />
-        <path d="M10 21 L30 21 L20 3 Z" fill="currentColor" />
-      </symbol>
-    </defs>
-  </svg>
+  <div class="forest-backdrop" aria-hidden="true"></div>
 
   <div id="app">
 
     <!-- ================= AUTH SCREEN ================= -->
     <section id="authScreen" class="auth-screen">
-      <div class="forest-strip" style="width:100%; max-width:520px; margin-bottom:-2px;"></div>
       <div class="auth-hero">
-        <div class="logo">🌲</div>
+        <div class="logo">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 4 L34 20 L28 20 L37 33 L29 33 L29 42 L19 42 L19 33 L11 33 L20 20 L14 20 Z" fill="currentColor" />
+          </svg>
+        </div>
         <h1>Evidencija rada</h1>
         <p>Doznaka stabala · Vlake · Teren · Šumarska evidencija</p>
       </div>
@@ -81,20 +75,26 @@
           <button type="submit" class="btn btn-primary">Registruj se</button>
         </form>
       </div>
-      <div class="forest-strip flip" style="width:100%; max-width:520px; margin-top:-2px;"></div>
     </section>
 
     <!-- ================= MAIN APP ================= -->
     <div id="mainApp" hidden>
       <header class="topbar">
-        <div class="brand"><span class="logo">🌲</span> Evidencija rada</div>
+        <div class="brand">
+          <span class="logo">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M24 4 L34 20 L28 20 L37 33 L29 33 L29 42 L19 42 L19 33 L11 33 L20 20 L14 20 Z" fill="currentColor" />
+            </svg>
+          </span>
+          Evidencija rada
+        </div>
         <nav class="nav-tabs">
-          <button data-view="entry" class="active" type="button">📆 Unos dana</button>
-          <button data-view="overview" type="button">📊 Godišnji pregled</button>
-          <button data-view="settings" type="button">⚙️ Postavke</button>
+          <button data-view="entry" class="active" type="button">Unos dana</button>
+          <button data-view="overview" type="button">Godišnji pregled</button>
+          <button data-view="settings" type="button">Postavke</button>
         </nav>
         <div class="user-box">
-          <span>👤 <span class="name" id="userNameLabel"></span></span>
+          <span class="name" id="userNameLabel"></span>
           <button id="logoutBtn" class="btn btn-ghost">Odjava</button>
         </div>
       </header>
@@ -110,7 +110,7 @@
                 <button id="nextMonth" type="button">›</button>
               </div>
               <div class="panel-header-actions">
-                <button id="rangeBtn" class="btn btn-secondary">📅 Unos za raspon dana</button>
+                <button id="rangeBtn" class="btn btn-secondary">Unos za raspon dana</button>
                 <button id="todayBtn" class="btn btn-secondary">Danas</button>
               </div>
             </div>
@@ -121,9 +121,11 @@
                 <span class="col-day">Dan</span>
                 <span class="col-type">Vrsta dana</span>
                 <span class="col-extra">Detalji</span>
+                <span class="col-chevron"></span>
               </div>
-              <div id="dayListBody"></div>
+              <div class="day-list-scroll" id="dayListBody"></div>
             </div>
+            <div class="month-summary" id="monthSummary"></div>
           </div>
         </section>
 
@@ -136,7 +138,7 @@
                 <span class="month-label" id="yearLabel"></span>
                 <button id="nextYear" type="button">›</button>
               </div>
-              <button id="printBtn" class="btn btn-secondary no-print">🖨️ Ispis / PDF</button>
+              <button id="printBtn" class="btn btn-secondary no-print">Ispis / PDF</button>
             </div>
             <div class="legend" id="overviewLegend"></div>
             <div class="stats-grid" id="statsGrid"></div>
@@ -181,7 +183,6 @@
         </section>
       </main>
 
-      <div class="forest-strip flip"></div>
       <footer class="app-footer">Evidencija rada · doznaka stabala za sječu · svi podaci pohranjeni lokalno u vašem pregledniku</footer>
     </div>
   </div>

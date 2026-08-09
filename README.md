@@ -7,7 +7,7 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
 ## Značajke
 
 - **Registracija i prijava s PIN-om** (4–6 znamenki), uz opciju "Zapamti me" da se ne morate prijavljivati svaki put.
-- **Unos radnog dana** — mjesec je prikazan u vidu tabele, dan po dan u redovima (kao dnevnik), s vikend danima (subota, nedjelja) posebno označenim tamnijom nijansom sive. Klikom na red bira se vrsta dana:
+- **Unos radnog dana** — mjesec je prikazan u vidu tabele, dan po dan u redovima (kao dnevnik), unutar skrolabilne liste sa fiksnim zaglavljem; kod tekućeg mjeseca prikaz se automatski pozicionira na današnji dan. Vikend dani (subota, nedjelja) posebno su označeni tamnijom nijansom sive. Klikom na red bira se vrsta dana:
   - Radni dani: **Doznaka stabala**, **Vlake**, **Teren**, **Kiša**, **Kancelarija**
   - Odsustva: **Godišnji odmor**, **Bolovanje**, **Praznik**, **Plaćeno odsustvo**
   - Kod **Doznake stabala** upisuje se dodatno *broj stabala* i *površina (ha)*.
@@ -15,8 +15,9 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
 - **Unos za raspon dana** — godišnji odmor (ili bolovanje/praznik/plaćeno odsustvo) moguće je unijeti odjednom za period od–do datuma, uz opciju preskakanja vikend dana.
 - **Postavke godišnjeg odmora** — broj dana godišnjeg odmora po godini i datum od kojeg se koristi.
 - **Godišnji pregled** — cijela godina (12 mjeseci) prikazana na jednom listu, sa statistikom (ukupno radnih dana, ukupan broj stabala, površina, kilometraža vlaka, iskorišteni/preostali godišnji odmor...) i mogućnošću ispisa/PDF-a.
+- **Sažetak mjeseca** ispod liste dana (radni dani, stabla, površina, kilometraža, odsustva).
 - Nazivi mjeseci po bosanskoj jezičkoj normi (januar, februar, mart ... juni, juli, august ...).
-- Moderan, svijetlo zeleni dizajn s motivima obrisa šume.
+- Moderan, svijetlo zeleni dizajn: čista tipografija, boje kategorija umjesto ikona, te suptilna slojevita silueta šume kao ambijentalna pozadina.
 
 ## Pokretanje lokalno
 

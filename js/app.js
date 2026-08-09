@@ -15,7 +15,7 @@ import {
   saveVacationSettings,
 } from './storage.js';
 import { computeYearStats } from './stats.js';
-import { renderForestStrips } from './forest.js';
+import { renderForestBackdrop } from './forest.js';
 
 const MJESECI = [
   'januar', 'februar', 'mart', 'april', 'maj', 'juni',
@@ -159,7 +159,7 @@ function initNav() {
 function buildLegendHTML() {
   return Object.values(DAY_TYPES)
     .map(
-      (t) => `<span class="legend-item"><span class="legend-dot" style="background:${t.color}"></span>${t.icon} ${t.label}</span>`
+      (t) => `<span class="legend-item"><span class="legend-dot" style="background:${t.color}"></span>${t.label}</span>`
     )
     .join('');
 }
@@ -182,6 +182,40 @@ function extraText(rec) {
   return '';
 }
 
+function renderMonthSummary(year, month) {
+  const counts = {};
+  let trees = 0;
+  let area = 0;
+  let km = 0;
+  const total = daysInMonth(year, month);
+
+  for (let day = 1; day <= total; day++) {
+    const rec = state.user.records[toKey(year, month, day)];
+    if (!rec || !rec.type) continue;
+    counts[rec.type] = (counts[rec.type] || 0) + 1;
+    if (rec.type === 'doznaka') {
+      trees += Number(rec.trees) || 0;
+      area += Number(rec.area) || 0;
+    }
+    if (rec.type === 'vlake') km += Number(rec.km) || 0;
+  }
+
+  const radni = Object.entries(counts)
+    .filter(([t]) => DAY_TYPES[t]?.group === 'radni')
+    .reduce((sum, [, n]) => sum + n, 0);
+
+  const parts = [`Radnih dana: <strong>${radni}</strong>`];
+  if (trees) parts.push(`Stabala: <strong>${trees}</strong>`);
+  if (area) parts.push(`Površina: <strong>${area.toFixed(2)} ha</strong>`);
+  if (km) parts.push(`Vlake: <strong>${km.toFixed(2)} km</strong>`);
+  if (counts.godisnji) parts.push(`Godišnji odmor: <strong>${counts.godisnji}</strong>`);
+  if (counts.bolovanje) parts.push(`Bolovanje: <strong>${counts.bolovanje}</strong>`);
+  if (counts.praznik) parts.push(`Praznik: <strong>${counts.praznik}</strong>`);
+  if (counts.placeno) parts.push(`Plaćeno odsustvo: <strong>${counts.placeno}</strong>`);
+
+  $('#monthSummary').innerHTML = parts.map((p) => `<span>${p}</span>`).join('');
+}
+
 function renderEntryView() {
   const { entryYear, entryMonth } = state;
   $('#monthLabel').textContent = `${MJESECI[entryMonth]} ${entryYear}`;
@@ -191,20 +225,22 @@ function renderEntryView() {
 
   const totalDays = daysInMonth(entryYear, entryMonth);
   const todayKey = toKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+  let todayRow = null;
 
   for (let day = 1; day <= totalDays; day++) {
     const key = toKey(entryYear, entryMonth, day);
     const jsDay = new Date(entryYear, entryMonth, day).getDay();
     const isWeekend = jsDay === 0 || jsDay === 6;
+    const isToday = key === todayKey;
     const rec = state.user.records[key];
 
     const row = document.createElement('div');
-    row.className = 'day-row' + (isWeekend ? ' weekend' : '') + (key === todayKey ? ' today' : '');
+    row.className = 'day-row' + (isWeekend ? ' weekend' : '') + (isToday ? ' today' : '');
     row.dataset.key = key;
 
     const dateCol = document.createElement('div');
     dateCol.className = 'col-date';
-    dateCol.innerHTML = `${key === todayKey ? '<span class="today-dot"></span>' : ''}${day}. ${MJESECI[entryMonth]}`;
+    dateCol.innerHTML = `<span class="dnum">${day}.</span> ${MJESECI[entryMonth].slice(0, 3)}`;
     row.appendChild(dateCol);
 
     const dayCol = document.createElement('div');
@@ -216,7 +252,7 @@ function renderEntryView() {
     typeCol.className = 'col-type';
     if (rec && rec.type && DAY_TYPES[rec.type]) {
       const type = DAY_TYPES[rec.type];
-      typeCol.innerHTML = `<span class="day-badge" style="background:${type.color}">${type.icon} ${type.label}</span>`;
+      typeCol.innerHTML = `<span class="day-badge" style="background:${type.color}">${type.label}</span>`;
     } else {
       typeCol.innerHTML = `<span class="day-badge empty-badge">+ Dodaj unos</span>`;
     }
@@ -234,6 +270,19 @@ function renderEntryView() {
 
     row.addEventListener('click', () => openDayModal(key));
     body.appendChild(row);
+    if (isToday) todayRow = row;
+  }
+
+  renderMonthSummary(entryYear, entryMonth);
+
+  // Kada je prikazan tekući mjesec, pomjeri prikaz na današnji dan. Skrol se
+  // poravnava na visinu reda kako nijedan red ne bi ostao presječen.
+  if (todayRow) {
+    const rowH = todayRow.offsetHeight || 46;
+    const context = Math.max(1, Math.floor(body.clientHeight / rowH / 2) - 1);
+    body.scrollTop = Math.max(0, todayRow.offsetTop - context * rowH);
+  } else {
+    body.scrollTop = 0;
   }
 }
 
@@ -268,7 +317,8 @@ function typeOptionHTML(key) {
   const t = DAY_TYPES[key];
   return `<label class="type-option" data-key="${key}">
     <input type="radio" name="dayType" value="${key}" />
-    <span>${t.icon} ${t.label}</span>
+    <span class="legend-dot" style="background:${t.color}"></span>
+    <span>${t.label}</span>
   </label>`;
 }
 
@@ -444,20 +494,21 @@ function renderOverviewView() {
   $('#yearLabel').textContent = String(year);
   const stats = computeYearStats(state.user, year);
 
+  const C = DAY_TYPES;
   const statCards = [
-    { icon: '🧭', label: 'Radnih dana ukupno', value: stats.radniDani },
-    { icon: '🌲', label: 'Doznaka — broj stabala', value: stats.trees },
-    { icon: '📐', label: 'Doznaka — površina (ha)', value: stats.area.toFixed(2) },
-    { icon: '🪵', label: 'Vlake — km', value: stats.km.toFixed(2) },
-    { icon: '🏖️', label: 'Godišnji odmor iskorišten', value: `${stats.vacationUsed} / ${stats.vacationSettings.days}` },
-    { icon: '🌿', label: 'Preostalo godišnjeg odmora', value: stats.vacationRemaining },
-    { icon: '🩺', label: 'Bolovanje (dana)', value: stats.counts.bolovanje || 0 },
-    { icon: '🎉', label: 'Praznik (dana)', value: stats.counts.praznik || 0 },
-    { icon: '📄', label: 'Plaćeno odsustvo (dana)', value: stats.counts.placeno || 0 },
+    { accent: C.teren.color, label: 'Radnih dana ukupno', value: stats.radniDani },
+    { accent: C.doznaka.color, label: 'Doznaka — broj stabala', value: stats.trees },
+    { accent: C.doznaka.color, label: 'Doznaka — površina', value: `${stats.area.toFixed(2)} ha` },
+    { accent: C.vlake.color, label: 'Vlake — projektovano', value: `${stats.km.toFixed(2)} km` },
+    { accent: C.godisnji.color, label: 'Godišnji odmor iskorišten', value: `${stats.vacationUsed} / ${stats.vacationSettings.days}` },
+    { accent: C.godisnji.color, label: 'Preostalo godišnjeg odmora', value: stats.vacationRemaining },
+    { accent: C.bolovanje.color, label: 'Bolovanje (dana)', value: stats.counts.bolovanje || 0 },
+    { accent: C.praznik.color, label: 'Praznik (dana)', value: stats.counts.praznik || 0 },
+    { accent: C.placeno.color, label: 'Plaćeno odsustvo (dana)', value: stats.counts.placeno || 0 },
   ];
   $('#statsGrid').innerHTML = statCards
     .map(
-      (c) => `<div class="stat-card"><div class="stat-icon">${c.icon}</div><div class="stat-body"><div class="stat-value">${c.value}</div><div class="stat-label">${c.label}</div></div></div>`
+      (c) => `<div class="stat-card" style="--accent-color:${c.accent}"><div class="stat-body"><div class="stat-value">${c.value}</div><div class="stat-label">${c.label}</div></div></div>`
     )
     .join('');
 
@@ -573,7 +624,7 @@ function initSettings() {
 /* ==================== INIT ==================== */
 
 function init() {
-  renderForestStrips();
+  renderForestBackdrop();
   initAuthScreen();
   initNav();
   initEntryNav();

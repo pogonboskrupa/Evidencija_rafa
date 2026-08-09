@@ -5,15 +5,15 @@ const DB_KEY = 'evidencija_rafa_db_v1';
 const SESSION_KEY = 'evidencija_rafa_session_v1';
 
 export const DAY_TYPES = {
-  doznaka: { label: 'Doznaka stabala', group: 'radni', color: '#2f7a3f', icon: '🌲' },
-  vlake: { label: 'Vlake', group: 'radni', color: '#8a5a34', icon: '🪵' },
-  teren: { label: 'Teren', group: 'radni', color: '#6b8f3c', icon: '🥾' },
-  kisa: { label: 'Kiša', group: 'radni', color: '#5b7a9c', icon: '🌧️' },
-  kancelarija: { label: 'Kancelarija', group: 'radni', color: '#7d7d7d', icon: '🏢' },
-  godisnji: { label: 'Godišnji odmor', group: 'odsustvo', color: '#8bc34a', icon: '🏖️' },
-  bolovanje: { label: 'Bolovanje', group: 'odsustvo', color: '#e07a5f', icon: '🩺' },
-  praznik: { label: 'Praznik', group: 'odsustvo', color: '#9575cd', icon: '🎉' },
-  placeno: { label: 'Plaćeno odsustvo', group: 'odsustvo', color: '#26a69a', icon: '📄' },
+  doznaka: { label: 'Doznaka stabala', group: 'radni', color: '#2f7d4f' },
+  vlake: { label: 'Vlake', group: 'radni', color: '#a06a33' },
+  teren: { label: 'Teren', group: 'radni', color: '#7aa63c' },
+  kisa: { label: 'Kiša', group: 'radni', color: '#4d7fa6' },
+  kancelarija: { label: 'Kancelarija', group: 'radni', color: '#6a7480' },
+  godisnji: { label: 'Godišnji odmor', group: 'odsustvo', color: '#dd9a2c' },
+  bolovanje: { label: 'Bolovanje', group: 'odsustvo', color: '#c85f56' },
+  praznik: { label: 'Praznik', group: 'odsustvo', color: '#8b6bb1' },
+  placeno: { label: 'Plaćeno odsustvo', group: 'odsustvo', color: '#2a9d8f' },
 };
 
 export const RADNI_SUBTIPOVI = ['doznaka', 'vlake', 'teren', 'kisa', 'kancelarija'];
