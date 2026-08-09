@@ -10,7 +10,8 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
 - **Unos radnog dana** — mjesec je prikazan u vidu tabele, dan po dan u redovima (kao dnevnik), unutar skrolabilne liste sa fiksnim zaglavljem; pri otvaranju aplikacije uvijek je prikazan tekući mjesec, a prikaz se automatski pozicionira na današnji dan. Vikend dani (subota, nedjelja) posebno su označeni tamnijom nijansom sive. Klikom na red bira se vrsta dana:
   - Radni dani: **Doznaka stabala**, **Vlake**, **Teren**, **Kiša**, **Kancelarija**
   - Odsustva: **Godišnji odmor**, **Bolovanje**, **Praznik**, **Plaćeno odsustvo**
-  - Kod **Doznake stabala** upisuje se dodatno *broj stabala* i *površina (ha)*.
+  - Kod **Doznake stabala**, **Vlaka** i **Kancelarije** dodatna polja (broj stabala i površina u ha, kilometraža vlaka, napomena) prikazuju se tek nakon klika na **"Potvrdi izbor"** — ne odmah po odabiru vrste dana. Već sačuvan dan ih pri ponovnom otvaranju prikazuje odmah, popunjene postojećim vrijednostima.
+  - Kod **Doznake stabala** upisuje se *broj stabala* i *površina (ha)*.
   - Kod **Vlaka** upisuje se *kilometraža projektovanih vlaka (km)*.
   - Kod **Kancelarije** upisuje se *napomena* — šta je tog dana rađeno.
 - **Zadaci po danu** — na svaki dan u kalendaru može se dodati lista zadataka koji se pojedinačno označavaju kao završeni ili brišu. Dan može imati samo zadatke, bez odabrane vrste dana. U listi dana prikazuje se oznaka `Zadaci 1/3`, a u godišnjem pregledu dan sa zadacima nosi sitnu tačku.
