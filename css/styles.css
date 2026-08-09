@@ -427,11 +427,6 @@ main {
   margin-bottom: 18px;
 }
 
-.panel-header-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
 
 .month-nav {
   display: flex;
@@ -1163,15 +1158,12 @@ main {
 
   .account-row, .danger-zone { flex-direction: column; align-items: stretch; }
   .account-actions .btn { flex: 1; }
-  .user-box { justify-content: space-between; }
   .panel { padding: 16px; border-radius: var(--radius-lg); }
   .year-grid { grid-template-columns: 1fr; }
   .type-options { grid-template-columns: 1fr; }
   .extra-fields { flex-direction: column; }
   .month-nav .month-label { min-width: 0; flex: 1; font-size: 15px; }
   .panel-header, .year-header { gap: 10px; }
-  .panel-header-actions { width: 100%; }
-  .panel-header-actions .btn { flex: 1; }
 
   /* na uskim ekranima ostaje samo oznaka zadataka, detalji se izostavljaju */
   .col-extra { flex: none; }

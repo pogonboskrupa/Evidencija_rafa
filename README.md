@@ -7,14 +7,13 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
 ## Značajke
 
 - **Registracija i prijava s PIN-om** (4–6 znamenki), uz opciju "Zapamti me" da se ne morate prijavljivati svaki put.
-- **Unos radnog dana** — mjesec je prikazan u vidu tabele, dan po dan u redovima (kao dnevnik), unutar skrolabilne liste sa fiksnim zaglavljem; kod tekućeg mjeseca prikaz se automatski pozicionira na današnji dan. Vikend dani (subota, nedjelja) posebno su označeni tamnijom nijansom sive. Klikom na red bira se vrsta dana:
+- **Unos radnog dana** — mjesec je prikazan u vidu tabele, dan po dan u redovima (kao dnevnik), unutar skrolabilne liste sa fiksnim zaglavljem; pri otvaranju aplikacije uvijek je prikazan tekući mjesec, a prikaz se automatski pozicionira na današnji dan. Vikend dani (subota, nedjelja) posebno su označeni tamnijom nijansom sive. Klikom na red bira se vrsta dana:
   - Radni dani: **Doznaka stabala**, **Vlake**, **Teren**, **Kiša**, **Kancelarija**
   - Odsustva: **Godišnji odmor**, **Bolovanje**, **Praznik**, **Plaćeno odsustvo**
   - Kod **Doznake stabala** upisuje se dodatno *broj stabala* i *površina (ha)*.
   - Kod **Vlaka** upisuje se *kilometraža projektovanih vlaka (km)*.
   - Kod **Kancelarije** upisuje se *napomena* — šta je tog dana rađeno.
 - **Zadaci po danu** — na svaki dan u kalendaru može se dodati lista zadataka koji se pojedinačno označavaju kao završeni ili brišu. Dan može imati samo zadatke, bez odabrane vrste dana. U listi dana prikazuje se oznaka `Zadaci 1/3`, a u godišnjem pregledu dan sa zadacima nosi sitnu tačku.
-- **Unos za raspon dana** — godišnji odmor (ili bolovanje/praznik/plaćeno odsustvo) moguće je unijeti odjednom za period od–do datuma, uz opciju preskakanja vikend dana.
 - **Postavke godišnjeg odmora** — broj dana godišnjeg odmora po godini i datum od kojeg se koristi.
 - **Godišnji pregled** — cijela godina (12 mjeseci) prikazana na jednom listu, sa statistikom (ukupno radnih dana, ukupan broj stabala, površina, kilometraža vlaka, iskorišteni/preostali godišnji odmor...) i mogućnošću ispisa/PDF-a.
 - **Sažetak mjeseca** ispod liste dana (radni dani, stabla, površina, kilometraža, odsustva, zadaci).

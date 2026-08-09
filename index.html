@@ -124,10 +124,6 @@
                 <span class="month-label" id="monthLabel"></span>
                 <button id="nextMonth" type="button">›</button>
               </div>
-              <div class="panel-header-actions">
-                <button id="rangeBtn" class="btn btn-secondary">Unos za raspon dana</button>
-                <button id="todayBtn" class="btn btn-secondary">Danas</button>
-              </div>
             </div>
             <div class="legend" id="entryLegend"></div>
             <div class="day-list" id="dayList">
@@ -251,39 +247,6 @@
       <div class="modal-actions">
         <button id="clearDayBtn" class="btn btn-ghost" type="button">Obriši unos</button>
         <button id="saveDayBtn" class="btn btn-primary" type="button">Spremi</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= MODAL: RASPON DANA ================= -->
-  <div id="rangeModalOverlay" class="modal-overlay" hidden>
-    <div class="modal">
-      <button class="modal-close btn btn-ghost" id="rangeModalCloseBtn" type="button">✕</button>
-      <h3>Unos za raspon dana</h3>
-      <p class="modal-sub">Npr. godišnji odmor od–do datuma. Primjenjuje se na sve dane u rasponu (uključivo).</p>
-
-      <div class="extra-fields" style="margin-top:0;">
-        <div class="field">
-          <label for="rangeFrom">Od datuma</label>
-          <input id="rangeFrom" type="date" required />
-        </div>
-        <div class="field">
-          <label for="rangeTo">Do datuma</label>
-          <input id="rangeTo" type="date" required />
-        </div>
-      </div>
-
-      <div class="type-group-title">Vrsta odsustva</div>
-      <div class="type-options" id="rangeOptions"></div>
-
-      <label class="checkbox-row" style="margin-top:14px;">
-        <input id="rangeSkipWeekends" type="checkbox" checked />
-        Preskoči vikend dane (subota, nedjelja)
-      </label>
-
-      <div class="modal-actions">
-        <button id="rangeCancelBtn" class="btn btn-ghost" type="button">Odustani</button>
-        <button id="rangeSaveBtn" class="btn btn-primary" type="button">Spremi raspon</button>
       </div>
     </div>
   </div>

@@ -10,7 +10,6 @@ import {
   getCurrentUser,
   saveUser,
   setRecord,
-  setRecordsBulk,
   deleteUser,
   getVacationSettings,
   saveVacationSettings,
@@ -383,12 +382,6 @@ function initEntryNav() {
     }
     renderEntryView();
   });
-  $('#todayBtn').addEventListener('click', () => {
-    const now = new Date();
-    state.entryYear = now.getFullYear();
-    state.entryMonth = now.getMonth();
-    renderEntryView();
-  });
 }
 
 /* ==================== MODAL ==================== */
@@ -616,87 +609,8 @@ function initModal() {
 
   // Escape zatvara otvoreni modal.
   document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    if (!$('#dayModalOverlay').hidden) closeDayModal();
-    else if (!$('#rangeModalOverlay').hidden) closeRangeModal();
+    if (e.key === 'Escape' && !$('#dayModalOverlay').hidden) closeDayModal();
   });
-}
-
-/* ==================== MODAL: RASPON DANA (npr. godišnji odmor od-do) ==================== */
-
-function openRangeModal() {
-  const today = toKey(state.entryYear, state.entryMonth, 1);
-  $('#rangeFrom').value = today;
-  $('#rangeTo').value = today;
-  $('#rangeSkipWeekends').checked = true;
-  $('#rangeOptions').innerHTML = ODSUSTVO_TIPOVI.map(typeOptionHTML)
-    .join('')
-    .replaceAll('name="dayType"', 'name="rangeType"');
-
-  const radios = $$('#rangeOptions input[type=radio]');
-  radios.forEach((r) => {
-    r.addEventListener('change', () => {
-      $$('#rangeOptions .type-option').forEach((opt) => opt.classList.toggle('selected', opt.dataset.key === r.value));
-    });
-  });
-  if (radios[0]) {
-    radios[0].checked = true;
-    radios[0].closest('.type-option').classList.add('selected');
-  }
-
-  $('#rangeModalOverlay').hidden = false;
-}
-
-function closeRangeModal() {
-  $('#rangeModalOverlay').hidden = true;
-}
-
-function saveRangeModal() {
-  const fromVal = $('#rangeFrom').value;
-  const toVal = $('#rangeTo').value;
-  const selected = $('#rangeOptions input[type=radio]:checked');
-  if (!fromVal || !toVal || !selected) {
-    closeRangeModal();
-    return;
-  }
-  const skipWeekends = $('#rangeSkipWeekends').checked;
-  const type = selected.value;
-
-  const start = new Date(`${fromVal}T00:00:00`);
-  const end = new Date(`${toVal}T00:00:00`);
-  if (start > end) {
-    alert('Datum "od" mora biti prije ili jednak datumu "do".');
-    return;
-  }
-
-  const keys = [];
-  const cursor = new Date(start);
-  while (cursor <= end) {
-    const isWeekend = cursor.getDay() === 0 || cursor.getDay() === 6;
-    if (!skipWeekends || !isWeekend) {
-      keys.push(toKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()));
-    }
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  // Zadaci ne ovise o vrsti dana, pa se zadržavaju pri unosu raspona.
-  setRecordsBulk(state.user, keys, (existing) => {
-    const record = { type };
-    if (existing?.tasks?.length) record.tasks = existing.tasks;
-    return record;
-  });
-  closeRangeModal();
-  renderEntryView();
-}
-
-function initRangeModal() {
-  $('#rangeBtn').addEventListener('click', openRangeModal);
-  $('#rangeModalCloseBtn').addEventListener('click', closeRangeModal);
-  $('#rangeCancelBtn').addEventListener('click', closeRangeModal);
-  $('#rangeModalOverlay').addEventListener('click', (e) => {
-    if (e.target.id === 'rangeModalOverlay') closeRangeModal();
-  });
-  $('#rangeSaveBtn').addEventListener('click', saveRangeModal);
 }
 
 /* ==================== GODIŠNJI PREGLED ==================== */
@@ -860,7 +774,6 @@ function init() {
   initNav();
   initEntryNav();
   initModal();
-  initRangeModal();
   initOverviewNav();
   initSettings();
 
