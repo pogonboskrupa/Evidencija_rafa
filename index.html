@@ -6,6 +6,16 @@
   <title>Evidencija rada — Doznaka stabala</title>
   <meta name="description" content="Godišnja evidencija rada za doznaku stabala, vlake, teren i ostale radne dane." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌲</text></svg>" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#2f7d4f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Evidencija rada" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -75,6 +85,15 @@
           <button type="submit" class="btn btn-primary">Registruj se</button>
         </form>
       </div>
+
+      <button class="btn btn-secondary install-btn" data-install-btn type="button" hidden>
+        Instaliraj aplikaciju
+      </button>
+
+      <p class="ios-hint" id="iosInstallHint" hidden>
+        Za instalaciju na iPhone: otvorite <strong>Podijeli</strong> u Safariju, pa
+        <strong>Dodaj na početni ekran</strong>.
+      </p>
     </section>
 
     <!-- ================= MAIN APP ================= -->
@@ -94,6 +113,9 @@
           <button data-view="settings" type="button">Postavke</button>
         </nav>
         <div class="user-box">
+          <button class="btn btn-secondary install-btn" data-install-btn type="button" hidden>
+            Instaliraj
+          </button>
           <span class="name" id="userNameLabel"></span>
           <button id="logoutBtn" class="btn btn-ghost">Odjava</button>
         </div>

@@ -18,6 +18,7 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
 - **Postavke godišnjeg odmora** — broj dana godišnjeg odmora po godini i datum od kojeg se koristi.
 - **Godišnji pregled** — cijela godina (12 mjeseci) prikazana na jednom listu, sa statistikom (ukupno radnih dana, ukupan broj stabala, površina, kilometraža vlaka, iskorišteni/preostali godišnji odmor...) i mogućnošću ispisa/PDF-a.
 - **Sažetak mjeseca** ispod liste dana (radni dani, stabla, površina, kilometraža, odsustva, zadaci).
+- **Instalacija kao aplikacija (PWA)** — aplikacija se može instalirati na telefon ili računar i radi bez internet konekcije.
 - Nazivi mjeseci po bosanskoj jezičkoj normi (januar, februar, mart ... juni, juli, august ...).
 - Moderan, svijetlo zeleni dizajn: čista tipografija, boje kategorija umjesto ikona, te suptilna slojevita silueta šume kao ambijentalna pozadina.
 
@@ -40,6 +41,20 @@ Da bi to proradilo:
 1. Otvorite **Settings → Pages** u repozitoriju.
 2. Pod **Build and deployment → Source** odaberite **GitHub Actions**.
 3. Nakon spajanja (merge) ove grane u `main`, workflow će automatski objaviti stranicu na `https://<korisnik>.github.io/<repo>/`.
+
+## Instalacija na telefon ili računar
+
+Aplikacija je PWA (Progressive Web App), pa se može instalirati kao samostalna aplikacija s vlastitom ikonom:
+
+- **Android / Chrome / Edge:** otvorite stranicu i kliknite **Instaliraj aplikaciju** (dugme se pojavi kada preglednik ponudi instalaciju), ili odaberite *Instaliraj aplikaciju* iz menija preglednika.
+- **iPhone / iPad (Safari):** otvorite **Podijeli → Dodaj na početni ekran**. iOS ne podržava automatski upit, pa aplikacija prikazuje uputu.
+- **Desktop Chrome / Edge:** ikona za instalaciju pojavi se u adresnoj traci.
+
+Nakon instalacije aplikacija radi i **bez internet konekcije** — service worker (`sw.js`) drži kopiju aplikacije, a svi podaci ionako žive lokalno na uređaju.
+
+Strategija keširanja je "mreža prvo, keš kao rezerva": kada ste online uvijek dobijate najnoviju verziju, a offline se učitava iz keša. Pri objavi nove verzije dovoljno je podići `VERSION` u `sw.js` — stari keš se briše, a otvorena stranica se jednom osvježi.
+
+> **Napomena:** instalacija i rad offline zahtijevaju HTTPS (ili `localhost`). GitHub Pages servira preko HTTPS-a, pa je uvjet zadovoljen.
 
 ## Napomena o podacima
 

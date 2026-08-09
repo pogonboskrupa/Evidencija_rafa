@@ -17,6 +17,7 @@ import {
 } from './storage.js';
 import { computeYearStats } from './stats.js';
 import { renderForestBackdrop } from './forest.js';
+import { initPWA } from './pwa.js';
 
 const MJESECI = [
   'januar', 'februar', 'mart', 'april', 'maj', 'juni',
@@ -843,6 +844,7 @@ function initSettings() {
 
 function init() {
   renderForestBackdrop();
+  initPWA();
   initAuthScreen();
   initNav();
   initEntryNav();

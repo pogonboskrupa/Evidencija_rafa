@@ -176,6 +176,30 @@ input, select { font: inherit; }
   box-shadow: var(--shadow-xs);
 }
 
+/* ---------- Instalacija (PWA) ---------- */
+.auth-screen .install-btn {
+  margin-top: 18px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.topbar .install-btn { padding: 8px 14px; font-size: 13.5px; }
+
+.ios-hint {
+  margin-top: 16px;
+  max-width: 400px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 11px 14px;
+  text-align: center;
+}
+
+.ios-hint strong { color: var(--primary-dark); }
+
 /* ---------- Forme ---------- */
 .field {
   margin-bottom: 16px;
