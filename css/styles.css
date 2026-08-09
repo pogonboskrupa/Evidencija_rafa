@@ -190,20 +190,23 @@ input, select { font: inherit; }
   color: var(--text-soft);
 }
 
-.field input, .field select {
+.field input, .field select, .field textarea {
   padding: 11px 13px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   font-size: 15px;
+  font-family: inherit;
   background: var(--surface);
   color: var(--text);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.field input:hover, .field select:hover { border-color: #b6cfaa; }
+.field textarea { resize: vertical; min-height: 74px; line-height: 1.45; }
 
-.field input:focus, .field select:focus {
+.field input:hover, .field select:hover, .field textarea:hover { border-color: #b6cfaa; }
+
+.field input:focus, .field select:focus, .field textarea:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3.5px rgba(47, 125, 79, 0.13);
 }
@@ -581,9 +584,17 @@ main {
 .day-row .col-extra {
   font-size: 13px;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.day-row .extra-detail {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .day-row.weekend .col-extra { color: var(--weekend-text); }
@@ -666,7 +677,7 @@ main {
   position: relative;
   background: var(--surface);
   border-radius: var(--radius-xl);
-  padding: 26px;
+  padding: 26px 26px 0;
   width: 100%;
   max-width: 460px;
   box-shadow: var(--shadow-lg);
@@ -752,10 +763,141 @@ main {
 .extra-fields .field { flex: 1; min-width: 0; margin-bottom: 0; }
 .extra-fields .field input { background: var(--surface); width: 100%; min-width: 0; }
 
+/* ---------- Zadaci u modalu dana ---------- */
+.tasks-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  padding: 8px;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 190px;
+  overflow-y: auto;
+}
+
+.task-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 8px 6px;
+}
+
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 9px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: border-color 0.14s ease;
+}
+
+.task-item:hover { border-color: var(--border-strong); }
+
+.task-item input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  flex: none;
+}
+
+.task-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-soft);
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+.task-item.done .task-text {
+  text-decoration: line-through;
+  color: #9bad93;
+}
+
+.task-del {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: #b5c4ac;
+  font-size: 17px;
+  line-height: 1;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.task-del:hover { background: var(--danger-light); color: var(--danger); }
+
+.task-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.task-add input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.task-add input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3.5px rgba(47, 125, 79, 0.13);
+}
+
+.task-add .btn { flex: none; padding: 9px 15px; }
+
+/* Oznaka zadataka u redu dana */
+.task-chip {
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+  background: var(--surface-alt);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+
+.task-chip.all-done {
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+  border-color: #c9e3bd;
+}
+
+.day-row.weekend .task-chip { background: #eceee9; border-color: #bcc4b6; }
+
+/* Akcije ostaju prikvačene za dno modala i kada se sadržaj skroluje. */
 .modal-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   gap: 10px;
-  margin-top: 24px;
+  margin: 22px -26px 0;
+  padding: 14px 26px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
 }
 
 .modal-actions .btn { flex: 1; }
@@ -852,6 +994,7 @@ main {
 }
 
 .mini-day {
+  position: relative;
   aspect-ratio: 1;
   border-radius: 4px;
   font-size: 9px;
@@ -862,6 +1005,20 @@ main {
   background: #eaf1e6;
   font-variant-numeric: tabular-nums;
 }
+
+/* dan sa zadacima nosi sitnu tačku u uglu */
+.mini-day.has-tasks::after {
+  content: '';
+  position: absolute;
+  top: 1.5px;
+  right: 1.5px;
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 50%;
+  background: var(--primary-dark);
+}
+
+.mini-day.has-tasks.filled::after { background: rgba(255, 255, 255, 0.9); }
 
 .mini-day.empty { visibility: hidden; }
 .mini-day.filled { color: #fff; font-weight: 700; }
@@ -922,9 +1079,11 @@ main {
   .panel-header-actions { width: 100%; }
   .panel-header-actions .btn { flex: 1; }
 
-  .col-extra { display: none; }
+  /* na uskim ekranima ostaje samo oznaka zadataka, detalji se izostavljaju */
+  .col-extra { flex: none; }
+  .day-row .extra-detail { display: none; }
   .col-date { width: 76px; }
-  .col-type { flex: 1; width: auto; }
+  .col-type { flex: 1; width: auto; min-width: 0; }
   .day-list-scroll { max-height: 62vh; }
 }
 

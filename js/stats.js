@@ -18,9 +18,19 @@ export function computeYearStats(user, year) {
   let area = 0;
   let km = 0;
   let radniDani = 0;
+  let tasksTotal = 0;
+  let tasksDone = 0;
 
   for (const rec of Object.values(records)) {
-    if (!rec || !rec.type) continue;
+    if (!rec) continue;
+
+    // zadaci se broje i na danima bez odabrane vrste dana
+    if (Array.isArray(rec.tasks)) {
+      tasksTotal += rec.tasks.length;
+      tasksDone += rec.tasks.filter((t) => t.done).length;
+    }
+
+    if (!rec.type) continue;
     counts[rec.type] = (counts[rec.type] || 0) + 1;
     if (DAY_TYPES[rec.type]?.group === 'radni') {
       radniDani += 1;
@@ -48,5 +58,7 @@ export function computeYearStats(user, year) {
     vacationSettings,
     vacationUsed,
     vacationRemaining,
+    tasksTotal,
+    tasksDone,
   };
 }

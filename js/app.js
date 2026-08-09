@@ -29,6 +29,7 @@ const state = {
   entryMonth: new Date().getMonth(),
   overviewYear: new Date().getFullYear(),
   modalDateKey: null,
+  modalTasks: [],
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -179,7 +180,15 @@ function extraText(rec) {
   if (rec.type === 'vlake' && rec.km) {
     return `${rec.km} km vlaka`;
   }
+  if (rec.type === 'kancelarija' && rec.note) {
+    return rec.note;
+  }
   return '';
+}
+
+function taskCounts(rec) {
+  const tasks = rec?.tasks || [];
+  return { total: tasks.length, done: tasks.filter((t) => t.done).length };
 }
 
 function renderMonthSummary(year, month) {
@@ -187,11 +196,20 @@ function renderMonthSummary(year, month) {
   let trees = 0;
   let area = 0;
   let km = 0;
+  let tasksTotal = 0;
+  let tasksDone = 0;
   const total = daysInMonth(year, month);
 
   for (let day = 1; day <= total; day++) {
     const rec = state.user.records[toKey(year, month, day)];
-    if (!rec || !rec.type) continue;
+    if (!rec) continue;
+
+    // zadaci se broje i na danima bez odabrane vrste dana
+    const tc = taskCounts(rec);
+    tasksTotal += tc.total;
+    tasksDone += tc.done;
+
+    if (!rec.type) continue;
     counts[rec.type] = (counts[rec.type] || 0) + 1;
     if (rec.type === 'doznaka') {
       trees += Number(rec.trees) || 0;
@@ -212,6 +230,7 @@ function renderMonthSummary(year, month) {
   if (counts.bolovanje) parts.push(`Bolovanje: <strong>${counts.bolovanje}</strong>`);
   if (counts.praznik) parts.push(`Praznik: <strong>${counts.praznik}</strong>`);
   if (counts.placeno) parts.push(`Plaćeno odsustvo: <strong>${counts.placeno}</strong>`);
+  if (tasksTotal) parts.push(`Zadaci: <strong>${tasksDone}/${tasksTotal}</strong>`);
 
   $('#monthSummary').innerHTML = parts.map((p) => `<span>${p}</span>`).join('');
 }
@@ -260,7 +279,25 @@ function renderEntryView() {
 
     const extraCol = document.createElement('div');
     extraCol.className = 'col-extra';
-    extraCol.textContent = extraText(rec);
+
+    const detail = extraText(rec);
+    if (detail) {
+      const detailEl = document.createElement('span');
+      detailEl.className = 'extra-detail';
+      detailEl.textContent = detail;
+      detailEl.title = detail;
+      extraCol.appendChild(detailEl);
+    }
+
+    const { total, done } = taskCounts(rec);
+    if (total) {
+      const chip = document.createElement('span');
+      chip.className = 'task-chip' + (done === total ? ' all-done' : '');
+      chip.textContent = `Zadaci ${done}/${total}`;
+      chip.title = rec.tasks.map((t) => `${t.done ? '✓' : '•'} ${t.text}`).join('\n');
+      extraCol.appendChild(chip);
+    }
+
     row.appendChild(extraCol);
 
     const chevron = document.createElement('div');
@@ -324,34 +361,108 @@ function typeOptionHTML(key) {
 
 function renderExtraFields(selectedType, rec) {
   const container = $('#extraFields');
+
   if (selectedType === 'doznaka') {
     container.innerHTML = `
       <div class="extra-fields">
         <div class="field">
           <label for="treesInput">Broj stabala</label>
-          <input id="treesInput" type="number" min="0" value="${rec?.trees ?? ''}" />
+          <input id="treesInput" type="number" min="0" />
         </div>
         <div class="field">
           <label for="areaInput">Površina (ha)</label>
-          <input id="areaInput" type="number" min="0" step="0.01" value="${rec?.area ?? ''}" />
+          <input id="areaInput" type="number" min="0" step="0.01" />
         </div>
       </div>`;
+    $('#treesInput').value = rec?.trees ?? '';
+    $('#areaInput').value = rec?.area ?? '';
   } else if (selectedType === 'vlake') {
     container.innerHTML = `
       <div class="extra-fields">
         <div class="field">
           <label for="kmInput">Kilometraža vlaka (km)</label>
-          <input id="kmInput" type="number" min="0" step="0.01" value="${rec?.km ?? ''}" />
+          <input id="kmInput" type="number" min="0" step="0.01" />
         </div>
       </div>`;
+    $('#kmInput').value = rec?.km ?? '';
+  } else if (selectedType === 'kancelarija') {
+    container.innerHTML = `
+      <div class="extra-fields">
+        <div class="field">
+          <label for="noteInput">Napomena</label>
+          <textarea id="noteInput" rows="3" maxlength="600" placeholder="Šta je rađeno u kancelariji…"></textarea>
+        </div>
+      </div>`;
+    $('#noteInput').value = rec?.note ?? '';
   } else {
     container.innerHTML = '';
   }
 }
 
+/* --- Zadaci unutar dana --- */
+
+function renderTaskList() {
+  const list = $('#taskList');
+  list.innerHTML = '';
+
+  if (!state.modalTasks.length) {
+    const empty = document.createElement('p');
+    empty.className = 'task-empty';
+    empty.textContent = 'Nema zadataka za ovaj dan.';
+    list.appendChild(empty);
+    return;
+  }
+
+  state.modalTasks.forEach((task, index) => {
+    const item = document.createElement('label');
+    item.className = 'task-item' + (task.done ? ' done' : '');
+
+    const check = document.createElement('input');
+    check.type = 'checkbox';
+    check.checked = !!task.done;
+    check.addEventListener('change', () => {
+      state.modalTasks[index].done = check.checked;
+      renderTaskList();
+    });
+
+    // textContent (a ne innerHTML) — tekst zadatka je korisnički unos
+    const text = document.createElement('span');
+    text.className = 'task-text';
+    text.textContent = task.text;
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'task-del';
+    del.title = 'Obriši zadatak';
+    del.setAttribute('aria-label', 'Obriši zadatak');
+    del.textContent = '×';
+    del.addEventListener('click', (e) => {
+      e.preventDefault();
+      state.modalTasks.splice(index, 1);
+      renderTaskList();
+    });
+
+    item.append(check, text, del);
+    list.appendChild(item);
+  });
+}
+
+function addTaskFromInput() {
+  const input = $('#taskInput');
+  const text = input.value.trim();
+  if (!text) return;
+  state.modalTasks.push({ text, done: false });
+  input.value = '';
+  renderTaskList();
+  input.focus();
+}
+
 function openDayModal(key) {
   state.modalDateKey = key;
   const rec = state.user.records[key];
+  state.modalTasks = (rec?.tasks || []).map((t) => ({ text: t.text, done: !!t.done }));
+  $('#taskInput').value = '';
+  renderTaskList();
   const [y, m, d] = key.split('-').map(Number);
   $('#modalDateLabel').textContent = `${d}. ${MJESECI[m - 1]} ${y}.`;
 
@@ -379,22 +490,48 @@ function closeDayModal() {
 }
 
 function saveDayModal() {
-  const selected = $('#dayModalOverlay input[type=radio]:checked');
-  if (!selected) {
+  const selected = $('#dayModalOverlay input[name=dayType]:checked');
+
+  // Zadatak upisan u polje, a nije potvrđen dugmetom "Dodaj", ipak se čuva.
+  const pending = $('#taskInput').value.trim();
+  if (pending) {
+    state.modalTasks.push({ text: pending, done: false });
+    $('#taskInput').value = '';
+  }
+
+  const tasks = state.modalTasks
+    .filter((t) => t.text.trim())
+    .map((t) => ({ text: t.text.trim(), done: !!t.done }));
+
+  // Ni vrsta dana ni zadaci — dan ostaje prazan.
+  if (!selected && !tasks.length) {
+    setRecord(state.user, state.modalDateKey, null);
     closeDayModal();
+    renderEntryView();
     return;
   }
-  const type = selected.value;
-  const record = { type };
-  if (type === 'doznaka') {
-    const trees = $('#treesInput')?.value;
-    const area = $('#areaInput')?.value;
-    if (trees !== '' && trees != null) record.trees = Number(trees);
-    if (area !== '' && area != null) record.area = Number(area);
-  } else if (type === 'vlake') {
-    const km = $('#kmInput')?.value;
-    if (km !== '' && km != null) record.km = Number(km);
+
+  const record = {};
+
+  if (selected) {
+    const type = selected.value;
+    record.type = type;
+    if (type === 'doznaka') {
+      const trees = $('#treesInput')?.value;
+      const area = $('#areaInput')?.value;
+      if (trees !== '' && trees != null) record.trees = Number(trees);
+      if (area !== '' && area != null) record.area = Number(area);
+    } else if (type === 'vlake') {
+      const km = $('#kmInput')?.value;
+      if (km !== '' && km != null) record.km = Number(km);
+    } else if (type === 'kancelarija') {
+      const note = $('#noteInput')?.value.trim();
+      if (note) record.note = note;
+    }
   }
+
+  if (tasks.length) record.tasks = tasks;
+
   setRecord(state.user, state.modalDateKey, record);
   closeDayModal();
   renderEntryView();
@@ -413,6 +550,14 @@ function initModal() {
   });
   $('#saveDayBtn').addEventListener('click', saveDayModal);
   $('#clearDayBtn').addEventListener('click', clearDayModal);
+
+  $('#taskAddBtn').addEventListener('click', addTaskFromInput);
+  $('#taskInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTaskFromInput();
+    }
+  });
 }
 
 /* ==================== MODAL: RASPON DANA (npr. godišnji odmor od-do) ==================== */
@@ -505,6 +650,7 @@ function renderOverviewView() {
     { accent: C.bolovanje.color, label: 'Bolovanje (dana)', value: stats.counts.bolovanje || 0 },
     { accent: C.praznik.color, label: 'Praznik (dana)', value: stats.counts.praznik || 0 },
     { accent: C.placeno.color, label: 'Plaćeno odsustvo (dana)', value: stats.counts.placeno || 0 },
+    { accent: C.kancelarija.color, label: 'Zadaci (završeni / ukupno)', value: `${stats.tasksDone} / ${stats.tasksTotal}` },
   ];
   $('#statsGrid').innerHTML = statCards
     .map(
@@ -553,11 +699,21 @@ function renderMiniMonth(year, month) {
     const el = document.createElement('div');
     el.className = 'mini-day' + (isWeekend ? ' weekend' : '');
     el.textContent = day;
+
+    const titleParts = [];
     if (rec && rec.type && DAY_TYPES[rec.type]) {
       el.classList.add('filled');
       el.style.background = DAY_TYPES[rec.type].color;
-      el.title = DAY_TYPES[rec.type].label;
+      titleParts.push(DAY_TYPES[rec.type].label);
     }
+
+    const tc = taskCounts(rec);
+    if (tc.total) {
+      el.classList.add('has-tasks');
+      titleParts.push(`Zadaci ${tc.done}/${tc.total}`);
+    }
+
+    if (titleParts.length) el.title = titleParts.join(' · ');
     grid.appendChild(el);
   }
 
