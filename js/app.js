@@ -10,6 +10,7 @@ import {
   getCurrentUser,
   saveUser,
   setRecord,
+  setRecordsBulk,
   getVacationSettings,
   saveVacationSettings,
 } from './storage.js';
@@ -17,10 +18,10 @@ import { computeYearStats } from './stats.js';
 import { renderForestStrips } from './forest.js';
 
 const MJESECI = [
-  'siječanj', 'veljača', 'ožujak', 'travanj', 'svibanj', 'lipanj',
-  'srpanj', 'kolovoz', 'rujan', 'listopad', 'studeni', 'prosinac',
+  'januar', 'februar', 'mart', 'april', 'maj', 'juni',
+  'juli', 'august', 'septembar', 'oktobar', 'novembar', 'decembar',
 ];
-const DANI = ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'];
+const DANI_PUNI = ['ponedjeljak', 'utorak', 'srijeda', 'četvrtak', 'petak', 'subota', 'nedjelja'];
 
 const state = {
   user: null,
@@ -168,30 +169,28 @@ function renderLegends() {
   $('#overviewLegend').innerHTML = buildLegendHTML();
 }
 
-/* ==================== UNOS DANA (MJESEČNI KALENDAR) ==================== */
+/* ==================== UNOS DANA (DANI U REDOVIMA) ==================== */
+
+function extraText(rec) {
+  if (!rec) return '';
+  if (rec.type === 'doznaka' && (rec.trees || rec.area)) {
+    return `${rec.trees ? rec.trees + ' stabala' : ''}${rec.trees && rec.area ? ' · ' : ''}${rec.area ? rec.area + ' ha' : ''}`;
+  }
+  if (rec.type === 'vlake' && rec.km) {
+    return `${rec.km} km vlaka`;
+  }
+  return '';
+}
 
 function renderEntryView() {
   const { entryYear, entryMonth } = state;
   $('#monthLabel').textContent = `${MJESECI[entryMonth]} ${entryYear}`;
 
-  const grid = $('#calendarGrid');
-  grid.innerHTML = '';
-  DANI.forEach((d) => {
-    const el = document.createElement('div');
-    el.className = 'weekday';
-    el.textContent = d;
-    grid.appendChild(el);
-  });
+  const body = $('#dayListBody');
+  body.innerHTML = '';
 
-  const firstDay = mondayIndex(new Date(entryYear, entryMonth, 1).getDay());
   const totalDays = daysInMonth(entryYear, entryMonth);
   const todayKey = toKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
-
-  for (let i = 0; i < firstDay; i++) {
-    const el = document.createElement('div');
-    el.className = 'day-cell empty';
-    grid.appendChild(el);
-  }
 
   for (let day = 1; day <= totalDays; day++) {
     const key = toKey(entryYear, entryMonth, day);
@@ -199,39 +198,42 @@ function renderEntryView() {
     const isWeekend = jsDay === 0 || jsDay === 6;
     const rec = state.user.records[key];
 
-    const cell = document.createElement('div');
-    cell.className = 'day-cell' + (isWeekend ? ' weekend' : '') + (key === todayKey ? ' today' : '');
-    cell.dataset.key = key;
+    const row = document.createElement('div');
+    row.className = 'day-row' + (isWeekend ? ' weekend' : '') + (key === todayKey ? ' today' : '');
+    row.dataset.key = key;
 
-    const num = document.createElement('div');
-    num.className = 'day-num';
-    num.textContent = day;
-    cell.appendChild(num);
+    const dateCol = document.createElement('div');
+    dateCol.className = 'col-date';
+    dateCol.innerHTML = `${key === todayKey ? '<span class="today-dot"></span>' : ''}${day}. ${MJESECI[entryMonth]}`;
+    row.appendChild(dateCol);
 
+    const dayCol = document.createElement('div');
+    dayCol.className = 'col-day';
+    dayCol.textContent = DANI_PUNI[mondayIndex(jsDay)];
+    row.appendChild(dayCol);
+
+    const typeCol = document.createElement('div');
+    typeCol.className = 'col-type';
     if (rec && rec.type && DAY_TYPES[rec.type]) {
       const type = DAY_TYPES[rec.type];
-      const badge = document.createElement('div');
-      badge.className = 'day-badge';
-      badge.style.background = type.color;
-      badge.textContent = `${type.icon} ${type.label}`;
-      cell.appendChild(badge);
-
-      if (rec.type === 'doznaka' && (rec.trees || rec.area)) {
-        const extra = document.createElement('div');
-        extra.className = 'day-extra';
-        extra.textContent = `${rec.trees ? rec.trees + ' stabala' : ''}${rec.trees && rec.area ? ' · ' : ''}${rec.area ? rec.area + ' ha' : ''}`;
-        cell.appendChild(extra);
-      }
-      if (rec.type === 'vlake' && rec.km) {
-        const extra = document.createElement('div');
-        extra.className = 'day-extra';
-        extra.textContent = `${rec.km} km vlaka`;
-        cell.appendChild(extra);
-      }
+      typeCol.innerHTML = `<span class="day-badge" style="background:${type.color}">${type.icon} ${type.label}</span>`;
+    } else {
+      typeCol.innerHTML = `<span class="day-badge empty-badge">+ Dodaj unos</span>`;
     }
+    row.appendChild(typeCol);
 
-    cell.addEventListener('click', () => openDayModal(key));
-    grid.appendChild(cell);
+    const extraCol = document.createElement('div');
+    extraCol.className = 'col-extra';
+    extraCol.textContent = extraText(rec);
+    row.appendChild(extraCol);
+
+    const chevron = document.createElement('div');
+    chevron.className = 'col-chevron';
+    chevron.textContent = '›';
+    row.appendChild(chevron);
+
+    row.addEventListener('click', () => openDayModal(key));
+    body.appendChild(row);
   }
 }
 
@@ -363,6 +365,78 @@ function initModal() {
   $('#clearDayBtn').addEventListener('click', clearDayModal);
 }
 
+/* ==================== MODAL: RASPON DANA (npr. godišnji odmor od-do) ==================== */
+
+function openRangeModal() {
+  const today = toKey(state.entryYear, state.entryMonth, 1);
+  $('#rangeFrom').value = today;
+  $('#rangeTo').value = today;
+  $('#rangeSkipWeekends').checked = true;
+  $('#rangeOptions').innerHTML = ODSUSTVO_TIPOVI.map(typeOptionHTML)
+    .join('')
+    .replaceAll('name="dayType"', 'name="rangeType"');
+
+  const radios = $$('#rangeOptions input[type=radio]');
+  radios.forEach((r) => {
+    r.addEventListener('change', () => {
+      $$('#rangeOptions .type-option').forEach((opt) => opt.classList.toggle('selected', opt.dataset.key === r.value));
+    });
+  });
+  if (radios[0]) {
+    radios[0].checked = true;
+    radios[0].closest('.type-option').classList.add('selected');
+  }
+
+  $('#rangeModalOverlay').hidden = false;
+}
+
+function closeRangeModal() {
+  $('#rangeModalOverlay').hidden = true;
+}
+
+function saveRangeModal() {
+  const fromVal = $('#rangeFrom').value;
+  const toVal = $('#rangeTo').value;
+  const selected = $('#rangeOptions input[type=radio]:checked');
+  if (!fromVal || !toVal || !selected) {
+    closeRangeModal();
+    return;
+  }
+  const skipWeekends = $('#rangeSkipWeekends').checked;
+  const type = selected.value;
+
+  const start = new Date(`${fromVal}T00:00:00`);
+  const end = new Date(`${toVal}T00:00:00`);
+  if (start > end) {
+    alert('Datum "od" mora biti prije ili jednak datumu "do".');
+    return;
+  }
+
+  const keys = [];
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    const isWeekend = cursor.getDay() === 0 || cursor.getDay() === 6;
+    if (!skipWeekends || !isWeekend) {
+      keys.push(toKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()));
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  setRecordsBulk(state.user, keys, { type });
+  closeRangeModal();
+  renderEntryView();
+}
+
+function initRangeModal() {
+  $('#rangeBtn').addEventListener('click', openRangeModal);
+  $('#rangeModalCloseBtn').addEventListener('click', closeRangeModal);
+  $('#rangeCancelBtn').addEventListener('click', closeRangeModal);
+  $('#rangeModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'rangeModalOverlay') closeRangeModal();
+  });
+  $('#rangeSaveBtn').addEventListener('click', saveRangeModal);
+}
+
 /* ==================== GODIŠNJI PREGLED ==================== */
 
 function renderOverviewView() {
@@ -371,18 +445,20 @@ function renderOverviewView() {
   const stats = computeYearStats(state.user, year);
 
   const statCards = [
-    { label: 'Radnih dana ukupno', value: stats.radniDani },
-    { label: 'Doznaka — broj stabala', value: stats.trees },
-    { label: 'Doznaka — površina (ha)', value: stats.area.toFixed(2) },
-    { label: 'Vlake — km', value: stats.km.toFixed(2) },
-    { label: 'Godišnji odmor iskorišten', value: `${stats.vacationUsed} / ${stats.vacationSettings.days}` },
-    { label: 'Preostalo godišnjeg odmora', value: stats.vacationRemaining },
-    { label: 'Bolovanje (dana)', value: stats.counts.bolovanje || 0 },
-    { label: 'Praznik (dana)', value: stats.counts.praznik || 0 },
-    { label: 'Plaćeno odsustvo (dana)', value: stats.counts.placeno || 0 },
+    { icon: '🧭', label: 'Radnih dana ukupno', value: stats.radniDani },
+    { icon: '🌲', label: 'Doznaka — broj stabala', value: stats.trees },
+    { icon: '📐', label: 'Doznaka — površina (ha)', value: stats.area.toFixed(2) },
+    { icon: '🪵', label: 'Vlake — km', value: stats.km.toFixed(2) },
+    { icon: '🏖️', label: 'Godišnji odmor iskorišten', value: `${stats.vacationUsed} / ${stats.vacationSettings.days}` },
+    { icon: '🌿', label: 'Preostalo godišnjeg odmora', value: stats.vacationRemaining },
+    { icon: '🩺', label: 'Bolovanje (dana)', value: stats.counts.bolovanje || 0 },
+    { icon: '🎉', label: 'Praznik (dana)', value: stats.counts.praznik || 0 },
+    { icon: '📄', label: 'Plaćeno odsustvo (dana)', value: stats.counts.placeno || 0 },
   ];
   $('#statsGrid').innerHTML = statCards
-    .map((c) => `<div class="stat-card"><div class="stat-value">${c.value}</div><div class="stat-label">${c.label}</div></div>`)
+    .map(
+      (c) => `<div class="stat-card"><div class="stat-icon">${c.icon}</div><div class="stat-body"><div class="stat-value">${c.value}</div><div class="stat-label">${c.label}</div></div></div>`
+    )
     .join('');
 
   const yearGrid = $('#yearGrid');
@@ -420,9 +496,11 @@ function renderMiniMonth(year, month) {
 
   for (let day = 1; day <= total; day++) {
     const key = toKey(year, month, day);
+    const jsDay = new Date(year, month, day).getDay();
+    const isWeekend = jsDay === 0 || jsDay === 6;
     const rec = state.user.records[key];
     const el = document.createElement('div');
-    el.className = 'mini-day';
+    el.className = 'mini-day' + (isWeekend ? ' weekend' : '');
     el.textContent = day;
     if (rec && rec.type && DAY_TYPES[rec.type]) {
       el.classList.add('filled');
@@ -500,6 +578,7 @@ function init() {
   initNav();
   initEntryNav();
   initModal();
+  initRangeModal();
   initOverviewNav();
   initSettings();
 

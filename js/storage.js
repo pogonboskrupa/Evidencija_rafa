@@ -132,6 +132,17 @@ export function setRecord(user, dateKey, record) {
   saveUser(user);
 }
 
+export function setRecordsBulk(user, dateKeys, record) {
+  dateKeys.forEach((dateKey) => {
+    if (record === null) {
+      delete user.records[dateKey];
+    } else {
+      user.records[dateKey] = record;
+    }
+  });
+  saveUser(user);
+}
+
 export function getVacationSettings(user, year) {
   const y = String(year);
   const existing = user.settings.vacationByYear[y];

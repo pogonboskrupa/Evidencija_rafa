@@ -11,10 +11,13 @@
   --border: #dcecd3;
   --danger: #c0453a;
   --danger-light: #fbeae7;
+  --weekend-bg: #dde1d8;
+  --weekend-bg-hover: #d2d7cc;
+  --weekend-text: #4a534a;
   --radius-lg: 20px;
   --radius-md: 14px;
   --radius-sm: 9px;
-  --shadow: 0 12px 32px rgba(31, 92, 44, 0.12);
+  --shadow: 0 16px 40px rgba(31, 92, 44, 0.14);
   --shadow-sm: 0 2px 10px rgba(31, 92, 44, 0.08);
   --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
 }
@@ -235,6 +238,18 @@ input, select { font-family: inherit; }
   position: sticky;
   top: 0;
   z-index: 20;
+  box-shadow: 0 2px 14px rgba(31, 92, 44, 0.06);
+}
+
+.topbar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  margin-top: 14px;
+  background: linear-gradient(90deg, var(--accent), var(--primary), var(--accent));
+  opacity: 0.5;
 }
 
 .brand {
@@ -296,6 +311,13 @@ main {
   border-radius: var(--radius-lg);
   padding: 20px;
   box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+
+.panel h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .panel-header {
@@ -305,6 +327,12 @@ main {
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.panel-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .month-nav {
@@ -353,72 +381,112 @@ main {
   display: inline-block;
 }
 
-/* ---------- Month calendar (entry view) ---------- */
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
+/* ---------- Month view: dani u redovima (entry view) ---------- */
+.day-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.day-list-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.day-list-header .col-date { width: 96px; }
+.day-list-header .col-day { width: 110px; }
+.day-list-header .col-type { flex: 0 0 210px; }
+.day-list-header .col-extra { flex: 1; }
+
+.day-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  border-left: 4px solid transparent;
+  cursor: pointer;
+  background: #fff;
+  transition: background 0.12s ease;
+}
+
+.day-row:hover { background: var(--primary-light); }
+
+.day-row.weekend { background: var(--weekend-bg); color: var(--weekend-text); }
+.day-row.weekend:hover { background: var(--weekend-bg-hover); }
+
+.day-row.today { border-left-color: var(--primary); }
+
+.day-row .col-date {
+  width: 96px;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.calendar-grid .weekday {
-  text-align: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
-  padding-bottom: 4px;
-  text-transform: uppercase;
-}
-
-.day-cell {
-  min-height: 84px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--border);
-  background: #fbfffa;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  cursor: pointer;
-  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
-  position: relative;
-}
-
-.day-cell:hover {
-  border-color: var(--primary);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-1px);
-}
-
-.day-cell.empty { visibility: hidden; cursor: default; }
-
-.day-cell .day-num { font-weight: 700; font-size: 13px; color: var(--text); }
-.day-cell.today .day-num {
-  color: #fff;
-  background: var(--primary);
+.day-row .today-dot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: var(--primary);
+  flex: none;
 }
 
-.day-cell.weekend { background: #f7faf5; }
+.day-row .col-day {
+  width: 110px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.day-row.weekend .col-day { color: var(--weekend-text); font-weight: 600; }
+
+.day-row .col-type {
+  flex: 0 0 210px;
+}
+
+.day-row .col-extra {
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.day-row.weekend .col-extra { color: var(--weekend-text); }
+
+.day-row .col-chevron {
+  color: var(--text-muted);
+  font-size: 13px;
+}
 
 .day-badge {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
-  border-radius: 6px;
-  padding: 3px 6px;
+  border-radius: 999px;
+  padding: 4px 10px;
   color: #fff;
-  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.day-extra {
-  font-size: 10.5px;
+.day-badge.empty-badge {
+  background: transparent;
   color: var(--text-muted);
-  line-height: 1.3;
+  border: 1.5px dashed var(--border);
+  font-weight: 600;
 }
+
+.day-row.weekend .day-badge.empty-badge { border-color: #b9c0b3; }
 
 /* ---------- Modal ---------- */
 .modal-overlay {
@@ -532,10 +600,29 @@ main {
   border-radius: var(--radius-md);
   padding: 14px;
   text-align: left;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+
+.stat-card .stat-icon {
+  font-size: 22px;
+  line-height: 1;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
 }
 
 .stat-card .stat-value {
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 800;
   color: var(--primary-dark);
 }
@@ -593,6 +680,8 @@ main {
 
 .mini-day.empty { visibility: hidden; }
 .mini-day.filled { color: #fff; font-weight: 700; }
+.mini-day.weekend { background: var(--weekend-bg); color: var(--weekend-text); font-weight: 600; }
+.mini-day.weekend.filled { color: #fff; }
 
 /* ---------- Settings ---------- */
 .settings-form {
@@ -630,7 +719,13 @@ main {
   .year-grid { grid-template-columns: 1fr; }
   .type-options { grid-template-columns: 1fr; }
   .extra-fields { flex-direction: column; }
-  .day-cell { min-height: 64px; }
+
+  .day-list-header .col-day,
+  .day-row .col-day { display: none; }
+  .day-list-header .col-extra,
+  .day-row .col-extra { display: none; }
+  .day-row { flex-wrap: wrap; }
+  .day-row .col-type { flex: 1 1 auto; }
 }
 
 /* ---------- Print (godišnji pregled na jednom listu) ---------- */

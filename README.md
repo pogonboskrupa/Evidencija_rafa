@@ -7,13 +7,15 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
 ## Značajke
 
 - **Registracija i prijava s PIN-om** (4–6 znamenki), uz opciju "Zapamti me" da se ne morate prijavljivati svaki put.
-- **Unos radnog dana** klikom na dan u mjesečnom kalendaru, s izborom vrste dana:
+- **Unos radnog dana** — mjesec je prikazan u vidu tabele, dan po dan u redovima (kao dnevnik), s vikend danima (subota, nedjelja) posebno označenim tamnijom nijansom sive. Klikom na red bira se vrsta dana:
   - Radni dani: **Doznaka stabala**, **Vlake**, **Teren**, **Kiša**, **Kancelarija**
   - Odsustva: **Godišnji odmor**, **Bolovanje**, **Praznik**, **Plaćeno odsustvo**
   - Kod **Doznake stabala** upisuje se dodatno *broj stabala* i *površina (ha)*.
-  - Kod **Vlaka** upisuje se *kilometraža projektiranih vlaka (km)*.
+  - Kod **Vlaka** upisuje se *kilometraža projektovanih vlaka (km)*.
+- **Unos za raspon dana** — godišnji odmor (ili bolovanje/praznik/plaćeno odsustvo) moguće je unijeti odjednom za period od–do datuma, uz opciju preskakanja vikend dana.
 - **Postavke godišnjeg odmora** — broj dana godišnjeg odmora po godini i datum od kojeg se koristi.
 - **Godišnji pregled** — cijela godina (12 mjeseci) prikazana na jednom listu, sa statistikom (ukupno radnih dana, ukupan broj stabala, površina, kilometraža vlaka, iskorišteni/preostali godišnji odmor...) i mogućnošću ispisa/PDF-a.
+- Nazivi mjeseci po bosanskoj jezičkoj normi (januar, februar, mart ... juni, juli, august ...).
 - Moderan, svijetlo zeleni dizajn s motivima obrisa šume.
 
 ## Pokretanje lokalno
