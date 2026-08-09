@@ -11,6 +11,7 @@ import {
   saveUser,
   setRecord,
   setRecordsBulk,
+  deleteUser,
   getVacationSettings,
   saveVacationSettings,
 } from './storage.js';
@@ -30,6 +31,7 @@ const state = {
   overviewYear: new Date().getFullYear(),
   modalDateKey: null,
   modalTasks: [],
+  renderedMonthKey: null,
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -78,40 +80,51 @@ function initAuthScreen() {
     showAuthError('');
   });
 
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    showAuthError('');
-    const username = $('#loginUsername').value;
-    const pin = $('#loginPin').value;
-    const remember = $('#loginRemember').checked;
+  // Hashiranje PIN-a traje nekoliko stotina milisekundi; dugme se onemogući
+  // kako uzastopni klikovi ne bi pokrenuli prijavu/registraciju više puta.
+  async function withBusyButton(form, label, fn) {
+    const btn = form.querySelector('button[type=submit]');
+    if (btn.disabled) return;
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = label;
     try {
-      const user = await verifyLogin(username, pin);
-      setSession(user.username, remember);
-      enterApp(user);
+      await fn();
     } catch (err) {
       showAuthError(err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
     }
-  });
+  }
 
-  registerForm.addEventListener('submit', async (e) => {
+  loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
     showAuthError('');
-    const fullName = $('#regFullName').value;
-    const username = $('#regUsername').value;
+    withBusyButton(loginForm, 'Prijava…', async () => {
+      const user = await verifyLogin($('#loginUsername').value, $('#loginPin').value);
+      setSession(user.username, $('#loginRemember').checked);
+      enterApp(user);
+    });
+  });
+
+  registerForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    showAuthError('');
     const pin = $('#regPin').value;
-    const pinConfirm = $('#regPinConfirm').value;
-    const remember = $('#regRemember').checked;
-    if (pin !== pinConfirm) {
+    if (pin !== $('#regPinConfirm').value) {
       showAuthError('PIN-ovi se ne podudaraju.');
       return;
     }
-    try {
-      const user = await registerUser({ fullName, username, pin });
-      setSession(user.username, remember);
+    withBusyButton(registerForm, 'Registracija…', async () => {
+      const user = await registerUser({
+        fullName: $('#regFullName').value,
+        username: $('#regUsername').value,
+        pin,
+      });
+      setSession(user.username, $('#regRemember').checked);
       enterApp(user);
-    } catch (err) {
-      showAuthError(err.message);
-    }
+    });
   });
 }
 
@@ -128,11 +141,19 @@ function enterApp(user) {
 
 function logout() {
   clearSession();
+  const now = new Date();
   state.user = null;
+  state.entryYear = now.getFullYear();
+  state.entryMonth = now.getMonth();
+  state.overviewYear = now.getFullYear();
+  state.renderedMonthKey = null;
+  state.modalTasks = [];
   $('#mainApp').hidden = true;
   $('#authScreen').hidden = false;
   $('#loginForm').reset();
+  $('#registerForm').reset();
   $('#loginRemember').checked = true;
+  showAuthError('');
 }
 
 /* ==================== NAV ==================== */
@@ -240,6 +261,14 @@ function renderEntryView() {
   $('#monthLabel').textContent = `${MJESECI[entryMonth]} ${entryYear}`;
 
   const body = $('#dayListBody');
+
+  // Pri ponovnom iscrtavanju istog mjeseca (npr. nakon spremanja dana) skrol
+  // ostaje gdje jeste; skače na današnji dan samo kada se mjesec promijeni.
+  const monthKey = `${entryYear}-${entryMonth}`;
+  const sameMonth = state.renderedMonthKey === monthKey;
+  const keptScroll = sameMonth ? body.scrollTop : 0;
+  state.renderedMonthKey = monthKey;
+
   body.innerHTML = '';
 
   const totalDays = daysInMonth(entryYear, entryMonth);
@@ -312,9 +341,11 @@ function renderEntryView() {
 
   renderMonthSummary(entryYear, entryMonth);
 
-  // Kada je prikazan tekući mjesec, pomjeri prikaz na današnji dan. Skrol se
-  // poravnava na visinu reda kako nijedan red ne bi ostao presječen.
-  if (todayRow) {
+  if (sameMonth) {
+    body.scrollTop = keptScroll;
+  } else if (todayRow) {
+    // Novi mjesec je tekući: pomjeri prikaz na današnji dan, poravnato na
+    // visinu reda kako nijedan red ne bi ostao presječen.
     const rowH = todayRow.offsetHeight || 46;
     const context = Math.max(1, Math.floor(body.clientHeight / rowH / 2) - 1);
     body.scrollTop = Math.max(0, todayRow.offsetTop - context * rowH);
@@ -469,15 +500,20 @@ function openDayModal(key) {
   $('#radniOptions').innerHTML = RADNI_SUBTIPOVI.map(typeOptionHTML).join('');
   $('#odsustvoOptions').innerHTML = ODSUSTVO_TIPOVI.map(typeOptionHTML).join('');
 
-  const radios = $$('#dayModalOverlay input[type=radio]');
+  // Selektori su ograničeni na ovaj modal — .type-option postoji i u modalu raspona.
+  const radios = $$('#dayModalOverlay input[name=dayType]');
   radios.forEach((r) => {
     r.checked = rec && rec.type === r.value;
     r.addEventListener('change', () => {
-      $$('.type-option').forEach((opt) => opt.classList.toggle('selected', opt.dataset.key === r.value));
+      $$('#dayModalOverlay .type-option').forEach((opt) =>
+        opt.classList.toggle('selected', opt.dataset.key === r.value)
+      );
       renderExtraFields(r.value, rec && rec.type === r.value ? rec : null);
     });
   });
-  $$('.type-option').forEach((opt) => opt.classList.toggle('selected', rec && rec.type === opt.dataset.key));
+  $$('#dayModalOverlay .type-option').forEach((opt) =>
+    opt.classList.toggle('selected', rec && rec.type === opt.dataset.key)
+  );
 
   renderExtraFields(rec?.type, rec);
 
@@ -487,6 +523,13 @@ function openDayModal(key) {
 function closeDayModal() {
   $('#dayModalOverlay').hidden = true;
   state.modalDateKey = null;
+}
+
+// Prazno polje -> null (ne upisuje se); nevaljan ili negativan unos -> 0.
+function toNonNegative(raw) {
+  if (raw === '' || raw == null) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.max(0, n) : 0;
 }
 
 function saveDayModal() {
@@ -517,13 +560,13 @@ function saveDayModal() {
     const type = selected.value;
     record.type = type;
     if (type === 'doznaka') {
-      const trees = $('#treesInput')?.value;
-      const area = $('#areaInput')?.value;
-      if (trees !== '' && trees != null) record.trees = Number(trees);
-      if (area !== '' && area != null) record.area = Number(area);
+      const trees = toNonNegative($('#treesInput')?.value);
+      const area = toNonNegative($('#areaInput')?.value);
+      if (trees !== null) record.trees = trees;
+      if (area !== null) record.area = area;
     } else if (type === 'vlake') {
-      const km = $('#kmInput')?.value;
-      if (km !== '' && km != null) record.km = Number(km);
+      const km = toNonNegative($('#kmInput')?.value);
+      if (km !== null) record.km = km;
     } else if (type === 'kancelarija') {
       const note = $('#noteInput')?.value.trim();
       if (note) record.note = note;
@@ -557,6 +600,13 @@ function initModal() {
       e.preventDefault();
       addTaskFromInput();
     }
+  });
+
+  // Escape zatvara otvoreni modal.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!$('#dayModalOverlay').hidden) closeDayModal();
+    else if (!$('#rangeModalOverlay').hidden) closeRangeModal();
   });
 }
 
@@ -617,7 +667,12 @@ function saveRangeModal() {
     cursor.setDate(cursor.getDate() + 1);
   }
 
-  setRecordsBulk(state.user, keys, { type });
+  // Zadaci ne ovise o vrsti dana, pa se zadržavaju pri unosu raspona.
+  setRecordsBulk(state.user, keys, (existing) => {
+    const record = { type };
+    if (existing?.tasks?.length) record.tasks = existing.tasks;
+    return record;
+  });
   closeRangeModal();
   renderEntryView();
 }
@@ -738,14 +793,23 @@ function initOverviewNav() {
 function populateSettingsYears() {
   const select = $('#settingsYear');
   const current = new Date().getFullYear();
-  const years = [];
-  for (let y = current - 1; y <= current + 2; y++) years.push(y);
-  select.innerHTML = years.map((y) => `<option value="${y}">${y}</option>`).join('');
-  select.value = String(state.overviewYear || current);
+
+  // Ponuđene godine: tekući prozor, sve godine u kojima postoje unosi ili
+  // spremljene postavke, te godina koja je otvorena u godišnjem pregledu —
+  // inače izbor ostane prazan kada se pregled odvede izvan prozora.
+  const years = new Set();
+  for (let y = current - 1; y <= current + 2; y++) years.add(y);
+  Object.keys(state.user.records).forEach((key) => years.add(Number(key.slice(0, 4))));
+  Object.keys(state.user.settings.vacationByYear).forEach((y) => years.add(Number(y)));
+  years.add(state.overviewYear);
+
+  const sorted = [...years].filter((y) => Number.isFinite(y) && y > 1970).sort((a, b) => a - b);
+  select.innerHTML = sorted.map((y) => `<option value="${y}">${y}</option>`).join('');
+  select.value = String(sorted.includes(state.overviewYear) ? state.overviewYear : current);
 }
 
 function loadSettingsForYear() {
-  const year = Number($('#settingsYear').value);
+  const year = Number($('#settingsYear').value) || new Date().getFullYear();
   const settings = getVacationSettings(state.user, year);
   $('#vacationDays').value = settings.days;
   $('#vacationFrom').value = settings.validFrom;
@@ -761,18 +825,16 @@ function initSettings() {
   $('#settingsYear').addEventListener('change', loadSettingsForYear);
   $('#settingsForm').addEventListener('submit', (e) => {
     e.preventDefault();
-    const year = Number($('#settingsYear').value);
-    const days = Number($('#vacationDays').value);
-    const validFrom = $('#vacationFrom').value;
+    const year = Number($('#settingsYear').value) || new Date().getFullYear();
+    const days = Math.max(0, Number($('#vacationDays').value) || 0);
+    const validFrom = $('#vacationFrom').value || `${year}-01-01`;
     saveVacationSettings(state.user, year, { days, validFrom });
     $('#settingsSaved').hidden = false;
   });
 
   $('#deleteAccountBtn').addEventListener('click', () => {
     if (!confirm('Sigurno želite obrisati svoj račun i sve podatke? Ova radnja se ne može poništiti.')) return;
-    const db = JSON.parse(localStorage.getItem('evidencija_rafa_db_v1') || '{"users":{}}');
-    delete db.users[state.user.username];
-    localStorage.setItem('evidencija_rafa_db_v1', JSON.stringify(db));
+    deleteUser(state.user.username);
     logout();
   });
 }

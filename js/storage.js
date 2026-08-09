@@ -132,15 +132,26 @@ export function setRecord(user, dateKey, record) {
   saveUser(user);
 }
 
-export function setRecordsBulk(user, dateKeys, record) {
+// makeRecord(postojeciZapis, dateKey) vraća novi zapis za taj dan, ili null za
+// brisanje. Funkcija se poziva za svaki dan posebno, pa svaki dan dobija vlastiti
+// objekat (bez dijeljene reference) i može zadržati podatke koji ne ovise o vrsti
+// dana, npr. zadatke.
+export function setRecordsBulk(user, dateKeys, makeRecord) {
   dateKeys.forEach((dateKey) => {
-    if (record === null) {
+    const next = makeRecord(user.records[dateKey], dateKey);
+    if (next == null) {
       delete user.records[dateKey];
     } else {
-      user.records[dateKey] = record;
+      user.records[dateKey] = next;
     }
   });
   saveUser(user);
+}
+
+export function deleteUser(username) {
+  const db = loadDB();
+  delete db.users[username];
+  saveDB(db);
 }
 
 export function getVacationSettings(user, year) {
