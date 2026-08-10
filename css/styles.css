@@ -933,11 +933,6 @@ main {
   box-shadow: 0 0 0 1px var(--primary) inset;
 }
 
-.confirm-type-btn {
-  width: 100%;
-  margin-top: 14px;
-}
-
 .extra-fields {
   margin-top: 18px;
   padding: 15px;

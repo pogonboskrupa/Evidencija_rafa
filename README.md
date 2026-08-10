@@ -11,7 +11,7 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
 - **Unos radnog dana** — mjesec je prikazan u vidu tabele, dan po dan u redovima (kao dnevnik), unutar skrolabilne liste sa fiksnim zaglavljem; pri otvaranju aplikacije uvijek je prikazan tekući mjesec, a prikaz se automatski pozicionira na današnji dan. Vikend dani (subota, nedjelja) posebno su označeni tamnijom nijansom sive. Klikom na red bira se vrsta dana:
   - Radni dani: **Doznaka stabala**, **Vlake**, **Teren**, **Kiša**, **Kancelarija**
   - Odsustva: **Godišnji odmor**, **Bolovanje**, **Praznik**, **Plaćeno odsustvo**
-  - Kod **Doznake stabala**, **Vlaka** i **Kancelarije** dodatna polja (broj stabala i površina u ha, kilometraža vlaka, napomena) prikazuju se tek nakon klika na **"Potvrdi izbor"** — ne odmah po odabiru vrste dana. Već sačuvan dan ih pri ponovnom otvaranju prikazuje odmah, popunjene postojećim vrijednostima.
+  - Kod **Doznake stabala**, **Vlaka** i **Kancelarije** dodatna polja (broj stabala i površina u ha, kilometraža vlaka, napomena) pojavljuju se **odmah** po odabiru vrste dana, bez skrolanja ili posebne potvrde. Odluka se u svakom trenutku može promijeniti — odabirom drugog tipa dana polja se ažuriraju, a modal se može zatvoriti (X, Escape ili klik izvan) bez spremanja bilo čega.
   - Kod **Doznake stabala** upisuje se *broj stabala* i *površina (ha)*.
   - Kod **Vlaka** upisuje se *kilometraža projektovanih vlaka (km)*.
   - Kod **Kancelarije** upisuje se *napomena* — šta je tog dana rađeno.

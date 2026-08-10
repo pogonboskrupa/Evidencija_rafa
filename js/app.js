@@ -496,9 +496,6 @@ function initEntryNav() {
 
 /* ==================== MODAL ==================== */
 
-// Tipovi dana koji imaju dodatna polja (broj stabala/površina, km, napomena).
-const TYPES_WITH_EXTRA_FIELDS = ['doznaka', 'vlake', 'kancelarija'];
-
 function typeOptionHTML(key) {
   const t = DAY_TYPES[key];
   return `<label class="type-option" data-key="${key}">
@@ -550,27 +547,6 @@ function renderExtraFields(selectedType, rec) {
     $('#noteInput').value = rec?.note ?? '';
   } else {
     container.innerHTML = '';
-  }
-}
-
-// Odlučuje da li se dodatna polja (broj stabala/površina, km, napomena)
-// prikazuju odmah ili tek nakon klika na "Potvrdi izbor". Već sačuvan tip
-// (isti kao rec.type) prikazuje polja odmah, popunjena postojećim
-// vrijednostima — nema potrebe ponovo potvrđivati nešto što je već upisano.
-// Novoodabran/promijenjen tip zahtijeva potvrdu prije nego se polja pojave.
-function updateExtraFieldsGate(type, rec) {
-  const confirmBtn = $('#confirmTypeBtn');
-  if (!TYPES_WITH_EXTRA_FIELDS.includes(type)) {
-    renderExtraFields(null, null);
-    confirmBtn.hidden = true;
-    return;
-  }
-  if (rec && rec.type === type) {
-    renderExtraFields(type, rec);
-    confirmBtn.hidden = true;
-  } else {
-    renderExtraFields(null, null);
-    confirmBtn.hidden = false;
   }
 }
 
@@ -672,14 +648,14 @@ function openDayModal(key) {
       $$('#dayModalOverlay .type-option').forEach((opt) =>
         opt.classList.toggle('selected', opt.dataset.key === r.value)
       );
-      updateExtraFieldsGate(r.value, rec);
+      renderExtraFields(r.value, rec && rec.type === r.value ? rec : null);
     });
   });
   $$('#dayModalOverlay .type-option').forEach((opt) =>
     opt.classList.toggle('selected', rec && rec.type === opt.dataset.key)
   );
 
-  updateExtraFieldsGate(rec?.type, rec);
+  renderExtraFields(rec?.type, rec);
 
   $('#dayModalOverlay').hidden = false;
 }
@@ -757,13 +733,6 @@ function initModal() {
   });
   $('#saveDayBtn').addEventListener('click', saveDayModal);
   $('#clearDayBtn').addEventListener('click', clearDayModal);
-
-  $('#confirmTypeBtn').addEventListener('click', () => {
-    const selected = $('#dayModalOverlay input[name=dayType]:checked');
-    if (!selected) return;
-    renderExtraFields(selected.value, null);
-    $('#confirmTypeBtn').hidden = true;
-  });
 
   $('#taskAddBtn').addEventListener('click', addTaskFromInput);
   $('#taskInput').addEventListener('keydown', (e) => {
