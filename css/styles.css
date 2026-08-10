@@ -1380,7 +1380,6 @@ main {
 
 .col-radnik { flex: 1; min-width: 0; font-weight: 650; }
 .col-raspon { width: 140px; flex: none; font-variant-numeric: tabular-nums; color: var(--text-soft); }
-.col-odjel { width: 130px; flex: none; min-width: 0; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .col-kolicina { width: 110px; flex: none; color: var(--text-soft); }
 .col-paketi { width: 90px; flex: none; color: var(--text-muted); }
 .col-del { width: 24px; flex: none; text-align: right; }
@@ -1590,10 +1589,9 @@ main {
   .plocice-row { flex-wrap: wrap; row-gap: 4px; padding: 10px 14px; }
   .col-radnik { flex: 1 1 auto; order: 1; }
   .col-del { order: 2; }
-  .col-raspon, .col-odjel, .col-kolicina, .col-paketi {
+  .col-raspon, .col-kolicina, .col-paketi {
     order: 3;
     width: auto;
-    max-width: none;
     font-size: 12px;
   }
   .odjel-header-actions { width: 100%; justify-content: space-between; }
