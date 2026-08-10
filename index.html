@@ -113,6 +113,7 @@
         </div>
         <nav class="nav-tabs">
           <button data-view="entry" class="active" type="button">Unos dana</button>
+          <button data-view="calendar" type="button">Kalendar</button>
           <button data-view="overview" type="button">Godišnji pregled</button>
           <button data-view="settings" type="button">Postavke</button>
         </nav>
@@ -140,6 +141,48 @@
               <div class="day-list-scroll" id="dayListBody"></div>
             </div>
             <div class="month-summary" id="monthSummary"></div>
+          </div>
+        </section>
+
+        <!-- ---- KALENDAR (zadaci, termini, rokovi) ---- -->
+        <section id="view-calendar" class="view" hidden>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="subtabs" id="calSubtabs">
+                <button data-calview="year" class="active" type="button">Godišnji kalendar</button>
+                <button data-calview="month" type="button">Pregled po mjesecu</button>
+              </div>
+            </div>
+
+            <!-- Godišnji kalendar: 12 mjeseci, klik na dan otvara zadatke -->
+            <div id="calYearPanel">
+              <div class="year-header">
+                <div class="month-nav">
+                  <button id="calPrevYear" type="button">‹</button>
+                  <span class="month-label" id="calYearLabel"></span>
+                  <button id="calNextYear" type="button">›</button>
+                </div>
+              </div>
+              <div class="stats-grid" id="calYearStats"></div>
+              <div class="year-grid" id="calYearGrid" style="margin-top:16px;"></div>
+            </div>
+
+            <!-- Pregled zadataka po mjesecu -->
+            <div id="calMonthPanel" hidden>
+              <div class="month-nav">
+                <button id="calPrevMonth" type="button">‹</button>
+                <span class="month-label" id="calMonthLabel"></span>
+                <button id="calNextMonth" type="button">›</button>
+              </div>
+
+              <div class="quick-task-add">
+                <input type="date" id="quickTaskDate" />
+                <input type="text" id="quickTaskText" maxlength="160" placeholder="Novi zadatak, termin ili rok…" />
+                <button type="button" class="btn btn-secondary" id="quickTaskAddBtn">Dodaj</button>
+              </div>
+
+              <div id="monthTaskList" class="month-task-list"></div>
+            </div>
           </div>
         </section>
 
@@ -252,6 +295,23 @@
       <div class="modal-actions">
         <button id="clearDayBtn" class="btn btn-ghost" type="button">Obriši unos</button>
         <button id="saveDayBtn" class="btn btn-primary" type="button">Spremi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: ZADACI ZA DAN (Kalendar tab) ================= -->
+  <div id="taskDayModalOverlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <button class="modal-close btn btn-ghost" id="taskDayModalCloseBtn" type="button">✕</button>
+      <h3 id="taskDayModalLabel">Datum</h3>
+      <p class="modal-sub">Zadaci, termini i rokovi za ovaj dan</p>
+
+      <div class="tasks-block">
+        <div class="task-list" id="taskDayList"></div>
+        <div class="task-add">
+          <input id="taskDayInput" type="text" maxlength="160" placeholder="Novi zadatak za ovaj dan…" />
+          <button id="taskDayAddBtn" class="btn btn-secondary" type="button">Dodaj</button>
+        </div>
       </div>
     </div>
   </div>

@@ -16,6 +16,7 @@ const {
   clearSession,
   getCurrentUser,
   setRecord,
+  setDayTasks,
   deleteUser,
   getVacationSettings,
   saveVacationSettings,
@@ -39,6 +40,10 @@ const state = {
   modalDateKey: null,
   modalTasks: [],
   renderedMonthKey: null,
+  calendarView: 'year', // 'year' | 'month'
+  calendarYear: new Date().getFullYear(),
+  calendarMonth: new Date().getMonth(),
+  taskModalDateKey: null,
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -269,12 +274,16 @@ function logout() {
 /* ==================== NAV ==================== */
 
 function switchView(view) {
-  ['entry', 'overview', 'settings'].forEach((v) => {
+  ['entry', 'calendar', 'overview', 'settings'].forEach((v) => {
     $(`#view-${v}`).hidden = v !== view;
   });
   $$('.nav-tabs button').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.view === view);
   });
+  // Osvježi svaki put pri ulasku u karticu — npr. zadaci dodani u Kalendaru
+  // moraju se odmah odraziti u "Unos dana" i obrnuto.
+  if (view === 'entry') renderEntryView();
+  if (view === 'calendar') renderCalendarView();
   if (view === 'overview') renderOverviewView();
   if (view === 'settings') renderSettingsView();
 }
@@ -565,51 +574,71 @@ function updateExtraFieldsGate(type, rec) {
   }
 }
 
-/* --- Zadaci unutar dana --- */
+/* --- Zadaci: dijeljeni prikaz retka (koristi ga i modal dana i Kalendar tab) --- */
+
+// task: {text, done}. onToggle(done) i onDelete() dobijaju samo notifikaciju
+// o namjeri — pozivalac odlučuje kako i gdje se promjena upisuje (u staged
+// niz unutar modala dana, ili odmah u localStorage za Kalendar tab).
+function createTaskRow(task, { onToggle, onDelete }) {
+  const item = document.createElement('label');
+  item.className = 'task-item' + (task.done ? ' done' : '');
+
+  const check = document.createElement('input');
+  check.type = 'checkbox';
+  check.checked = !!task.done;
+  check.addEventListener('change', () => onToggle(check.checked));
+
+  // textContent (a ne innerHTML) — tekst zadatka je korisnički unos
+  const text = document.createElement('span');
+  text.className = 'task-text';
+  text.textContent = task.text;
+
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.className = 'task-del';
+  del.title = 'Obriši zadatak';
+  del.setAttribute('aria-label', 'Obriši zadatak');
+  del.textContent = '×';
+  del.addEventListener('click', (e) => {
+    e.preventDefault();
+    onDelete();
+  });
+
+  item.append(check, text, del);
+  return item;
+}
+
+function renderTaskEmptyState(container, message) {
+  container.innerHTML = '';
+  const empty = document.createElement('p');
+  empty.className = 'task-empty';
+  empty.textContent = message;
+  container.appendChild(empty);
+}
+
+/* --- Zadaci unutar dana (modal "Unos dana") --- */
 
 function renderTaskList() {
   const list = $('#taskList');
   list.innerHTML = '';
 
   if (!state.modalTasks.length) {
-    const empty = document.createElement('p');
-    empty.className = 'task-empty';
-    empty.textContent = 'Nema zadataka za ovaj dan.';
-    list.appendChild(empty);
+    renderTaskEmptyState(list, 'Nema zadataka za ovaj dan.');
     return;
   }
 
   state.modalTasks.forEach((task, index) => {
-    const item = document.createElement('label');
-    item.className = 'task-item' + (task.done ? ' done' : '');
-
-    const check = document.createElement('input');
-    check.type = 'checkbox';
-    check.checked = !!task.done;
-    check.addEventListener('change', () => {
-      state.modalTasks[index].done = check.checked;
-      renderTaskList();
+    const row = createTaskRow(task, {
+      onToggle: (done) => {
+        state.modalTasks[index].done = done;
+        renderTaskList();
+      },
+      onDelete: () => {
+        state.modalTasks.splice(index, 1);
+        renderTaskList();
+      },
     });
-
-    // textContent (a ne innerHTML) — tekst zadatka je korisnički unos
-    const text = document.createElement('span');
-    text.className = 'task-text';
-    text.textContent = task.text;
-
-    const del = document.createElement('button');
-    del.type = 'button';
-    del.className = 'task-del';
-    del.title = 'Obriši zadatak';
-    del.setAttribute('aria-label', 'Obriši zadatak');
-    del.textContent = '×';
-    del.addEventListener('click', (e) => {
-      e.preventDefault();
-      state.modalTasks.splice(index, 1);
-      renderTaskList();
-    });
-
-    item.append(check, text, del);
-    list.appendChild(item);
+    list.appendChild(row);
   });
 }
 
@@ -851,6 +880,282 @@ function initOverviewNav() {
   $('#printBtn').addEventListener('click', () => window.print());
 }
 
+/* ==================== KALENDAR (zadaci, termini, rokovi) ==================== */
+// Koristi isto polje rec.tasks kao modal "Unos dana", ali kroz setDayTasks
+// (ne setRecord) — tako se mijenja samo lista zadataka, a vrsta dana i njena
+// dodatna polja (stabla, površina, km, napomena) ostaju netaknuti.
+
+function renderCalendarView() {
+  $('#calYearPanel').hidden = state.calendarView !== 'year';
+  $('#calMonthPanel').hidden = state.calendarView !== 'month';
+  $$('#calSubtabs button').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.calview === state.calendarView);
+  });
+  if (state.calendarView === 'year') renderCalendarYear();
+  else renderCalendarMonthList();
+}
+
+function renderCalendarYear() {
+  const year = state.calendarYear;
+  $('#calYearLabel').textContent = String(year);
+
+  const stats = computeYearStats(state.user, year);
+  const remaining = stats.tasksTotal - stats.tasksDone;
+  const cards = [
+    { accent: '#2f7d4f', label: 'Ukupno zadataka', value: stats.tasksTotal },
+    { accent: '#2f7d4f', label: 'Završeno', value: stats.tasksDone },
+    { accent: '#dd9a2c', label: 'Preostalo', value: remaining },
+  ];
+  $('#calYearStats').innerHTML = cards
+    .map(
+      (c) => `<div class="stat-card" style="--accent-color:${c.accent}"><div class="stat-body"><div class="stat-value">${c.value}</div><div class="stat-label">${c.label}</div></div></div>`
+    )
+    .join('');
+
+  const grid = $('#calYearGrid');
+  grid.innerHTML = '';
+  for (let m = 0; m < 12; m++) {
+    grid.appendChild(renderCalendarMiniMonth(year, m));
+  }
+}
+
+// Za razliku od Godišnjeg pregleda (koji boji dan po vrsti radnog dana), ovdje
+// boja označava stanje zadataka: zeleno = svi završeni, žuto = ima nezavršenih.
+function renderCalendarMiniMonth(year, month) {
+  const wrap = document.createElement('div');
+  wrap.className = 'mini-month';
+
+  const title = document.createElement('h4');
+  title.textContent = `${MJESECI[month]} ${year}`;
+  wrap.appendChild(title);
+
+  const grid = document.createElement('div');
+  grid.className = 'mini-grid';
+  ['P', 'U', 'S', 'Č', 'P', 'S', 'N'].forEach((d) => {
+    const el = document.createElement('div');
+    el.className = 'mw';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const firstDay = mondayIndex(new Date(year, month, 1).getDay());
+  const total = daysInMonth(year, month);
+
+  for (let i = 0; i < firstDay; i++) {
+    const el = document.createElement('div');
+    el.className = 'mini-day empty';
+    grid.appendChild(el);
+  }
+
+  for (let day = 1; day <= total; day++) {
+    const key = toKey(year, month, day);
+    const jsDay = new Date(year, month, day).getDay();
+    const isWeekend = jsDay === 0 || jsDay === 6;
+    const rec = state.user.records[key];
+    const tc = taskCounts(rec);
+
+    const el = document.createElement('div');
+    el.className = 'mini-day' + (isWeekend ? ' weekend' : '');
+    el.textContent = day;
+
+    if (tc.total) {
+      el.classList.add('filled');
+      el.style.background = tc.done === tc.total ? '#2f7d4f' : '#dd9a2c';
+      el.title = `Zadaci: ${tc.done}/${tc.total}`;
+    }
+
+    el.addEventListener('click', () => openTaskDayModal(key));
+    grid.appendChild(el);
+  }
+
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+function renderCalendarMonthList() {
+  const { calendarYear, calendarMonth } = state;
+  $('#calMonthLabel').textContent = `${MJESECI[calendarMonth]} ${calendarYear}`;
+  $('#quickTaskDate').value = toKey(calendarYear, calendarMonth, 1);
+
+  const total = daysInMonth(calendarYear, calendarMonth);
+  const container = $('#monthTaskList');
+  container.innerHTML = '';
+  let anyTasks = false;
+
+  for (let day = 1; day <= total; day++) {
+    const key = toKey(calendarYear, calendarMonth, day);
+    const rec = state.user.records[key];
+    const tasks = rec?.tasks || [];
+    if (!tasks.length) continue;
+    anyTasks = true;
+
+    const jsDay = new Date(calendarYear, calendarMonth, day).getDay();
+
+    const group = document.createElement('div');
+    group.className = 'month-task-group';
+
+    const heading = document.createElement('div');
+    heading.className = 'month-task-date';
+    heading.textContent = `${day}. ${MJESECI[calendarMonth]}`;
+    const weekdayTag = document.createElement('span');
+    weekdayTag.className = 'weekday-tag';
+    weekdayTag.textContent = DANI_PUNI[mondayIndex(jsDay)];
+    heading.appendChild(weekdayTag);
+    group.appendChild(heading);
+
+    const rows = document.createElement('div');
+    rows.className = 'month-task-rows';
+    tasks.forEach((task, index) => {
+      const row = createTaskRow(task, {
+        onToggle: (done) => {
+          const updated = tasks.map((t, i) => (i === index ? { ...t, done } : t));
+          setDayTasks(state.user, key, updated);
+          renderCalendarMonthList();
+        },
+        onDelete: () => {
+          const updated = tasks.filter((_, i) => i !== index);
+          setDayTasks(state.user, key, updated);
+          renderCalendarMonthList();
+        },
+      });
+      rows.appendChild(row);
+    });
+    group.appendChild(rows);
+
+    container.appendChild(group);
+  }
+
+  if (!anyTasks) renderTaskEmptyState(container, 'Nema zadataka za ovaj mjesec.');
+}
+
+/* --- Modal: zadaci za jedan dan (otvara se klikom u godišnjem kalendaru) --- */
+
+function renderTaskDayList(dateKey) {
+  const rec = state.user.records[dateKey];
+  const tasks = rec?.tasks || [];
+  const list = $('#taskDayList');
+  list.innerHTML = '';
+
+  if (!tasks.length) {
+    renderTaskEmptyState(list, 'Nema zadataka za ovaj dan.');
+    return;
+  }
+
+  tasks.forEach((task, index) => {
+    const row = createTaskRow(task, {
+      onToggle: (done) => {
+        const updated = tasks.map((t, i) => (i === index ? { ...t, done } : t));
+        setDayTasks(state.user, dateKey, updated);
+        renderTaskDayList(dateKey);
+      },
+      onDelete: () => {
+        const updated = tasks.filter((_, i) => i !== index);
+        setDayTasks(state.user, dateKey, updated);
+        renderTaskDayList(dateKey);
+      },
+    });
+    list.appendChild(row);
+  });
+}
+
+function openTaskDayModal(dateKey) {
+  state.taskModalDateKey = dateKey;
+  const [y, m, d] = dateKey.split('-').map(Number);
+  $('#taskDayModalLabel').textContent = `${d}. ${MJESECI[m - 1]} ${y}.`;
+  $('#taskDayInput').value = '';
+  renderTaskDayList(dateKey);
+  $('#taskDayModalOverlay').hidden = false;
+}
+
+function closeTaskDayModal() {
+  $('#taskDayModalOverlay').hidden = true;
+  state.taskModalDateKey = null;
+  // Mini-mjeseci u pozadini se ne osvježavaju uživo dok je modal otvoren —
+  // učini to jednom, ovdje, umjesto pri svakoj izmjeni unutar modala.
+  if (state.calendarView === 'year') renderCalendarYear();
+}
+
+function addTaskDayFromInput() {
+  const input = $('#taskDayInput');
+  const text = input.value.trim();
+  if (!text || !state.taskModalDateKey) return;
+  const dateKey = state.taskModalDateKey;
+  const rec = state.user.records[dateKey];
+  const tasks = [...(rec?.tasks || []), { text, done: false }];
+  setDayTasks(state.user, dateKey, tasks);
+  input.value = '';
+  renderTaskDayList(dateKey);
+}
+
+function initCalendarNav() {
+  $$('#calSubtabs button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.calendarView = btn.dataset.calview;
+      renderCalendarView();
+    });
+  });
+
+  $('#calPrevYear').addEventListener('click', () => {
+    state.calendarYear -= 1;
+    renderCalendarYear();
+  });
+  $('#calNextYear').addEventListener('click', () => {
+    state.calendarYear += 1;
+    renderCalendarYear();
+  });
+
+  $('#calPrevMonth').addEventListener('click', () => {
+    state.calendarMonth -= 1;
+    if (state.calendarMonth < 0) {
+      state.calendarMonth = 11;
+      state.calendarYear -= 1;
+    }
+    renderCalendarMonthList();
+  });
+  $('#calNextMonth').addEventListener('click', () => {
+    state.calendarMonth += 1;
+    if (state.calendarMonth > 11) {
+      state.calendarMonth = 0;
+      state.calendarYear += 1;
+    }
+    renderCalendarMonthList();
+  });
+
+  function addQuickTask() {
+    const dateVal = $('#quickTaskDate').value;
+    const text = $('#quickTaskText').value.trim();
+    if (!dateVal || !text) return;
+    const rec = state.user.records[dateVal];
+    const tasks = [...(rec?.tasks || []), { text, done: false }];
+    setDayTasks(state.user, dateVal, tasks);
+    $('#quickTaskText').value = '';
+    renderCalendarMonthList();
+  }
+  $('#quickTaskAddBtn').addEventListener('click', addQuickTask);
+  $('#quickTaskText').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addQuickTask();
+    }
+  });
+
+  $('#taskDayModalCloseBtn').addEventListener('click', closeTaskDayModal);
+  $('#taskDayModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'taskDayModalOverlay') closeTaskDayModal();
+  });
+  $('#taskDayAddBtn').addEventListener('click', addTaskDayFromInput);
+  $('#taskDayInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTaskDayFromInput();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('#taskDayModalOverlay').hidden) closeTaskDayModal();
+  });
+}
+
 /* ==================== POSTAVKE ==================== */
 
 function populateSettingsYears() {
@@ -914,6 +1219,7 @@ function init() {
   initEntryNav();
   initModal();
   initOverviewNav();
+  initCalendarNav();
   initSettings();
 
   const session = getSession();

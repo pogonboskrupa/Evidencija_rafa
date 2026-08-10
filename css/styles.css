@@ -530,6 +530,39 @@ input, select { font: inherit; }
   box-shadow: var(--shadow-xs);
 }
 
+/* Podkartice unutar sekcije (npr. Kalendar: Godišnji/Po mjesecu). Odvojena
+   klasa od .nav-tabs — .nav-tabs button je selektor koji switchView() koristi
+   za glavnu navigaciju i ne smije pogoditi ove dugmadi. */
+.subtabs {
+  display: flex;
+  gap: 2px;
+  background: var(--surface-alt);
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  width: fit-content;
+}
+
+.subtabs button {
+  border: none;
+  background: transparent;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--text-muted);
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.subtabs button:hover { color: var(--primary-dark); }
+
+.subtabs button.active {
+  background: var(--surface);
+  color: var(--primary-dark);
+  box-shadow: var(--shadow-xs);
+}
+
 main {
   flex: 1;
   padding: 26px 24px 60px;
@@ -1180,6 +1213,78 @@ main {
 .mini-day.weekend { background: var(--weekend-bg); color: var(--weekend-text); font-weight: 600; }
 .mini-day.weekend.filled { color: #fff; }
 
+/* Kalendar tab: dani su klikabilni (otvaraju zadatke za taj dan) */
+#calYearGrid .mini-day {
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.1s ease;
+}
+#calYearGrid .mini-day:not(.empty):hover {
+  transform: scale(1.08);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ---------- Kalendar: brzi unos zadatka (Pregled po mjesecu) ---------- */
+.quick-task-add {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0 4px;
+}
+
+.quick-task-add input {
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.quick-task-add input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3.5px rgba(47, 125, 79, 0.13);
+}
+
+.quick-task-add input[type='date'] { flex: 0 0 150px; }
+.quick-task-add input[type='text'] { flex: 1; min-width: 160px; }
+
+/* ---------- Kalendar: pregled zadataka po mjesecu ---------- */
+.month-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.month-task-date {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--primary-dark);
+  margin-bottom: 7px;
+}
+
+.month-task-date .weekday-tag {
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: capitalize;
+  margin-left: 7px;
+  font-size: 12px;
+}
+
+.month-task-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.month-task-list .task-empty {
+  text-align: center;
+  padding: 30px 0;
+}
+
 /* ---------- Postavke ---------- */
 .settings-form {
   display: grid;
@@ -1298,7 +1403,17 @@ main {
   .topbar { padding: 6px 12px; gap: 10px; }
   .brand-text { display: none; }
   .nav-tabs { flex: 1; justify-content: center; }
-  .nav-tabs button { flex: 1; padding: 7px 4px; font-size: 12px; }
+  /* min-width:0 je nužan — flex stavke se po defaultu ne smanjuju ispod
+     širine svog sadržaja (min-width:auto), pa bi četiri dugmeta (npr.
+     "Godišnji pregled") gurala traku van ekrana bez ovoga. */
+  .nav-tabs button {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 3px;
+    font-size: 11px;
+    white-space: normal;
+    line-height: 1.15;
+  }
 
   .account-row, .danger-zone { flex-direction: column; align-items: stretch; }
   .account-actions .btn { flex: 1; }

@@ -143,6 +143,28 @@ window.Storage = (function () {
     saveDB(db);
   }
 
+  // Mijenja SAMO listu zadataka za dan, čuvajući ostatak zapisa (vrstu dana,
+  // broj stabala, napomenu...) nepromijenjenim — za razliku od setRecord, koji
+  // zapis potpuno zamjenjuje. Prazna lista briše polje tasks; ako dan poslije
+  // toga nema ni vrstu ni zadatke, cijeli zapis se briše.
+  function setDayTasks(user, dateKey, tasks) {
+    const existing = user.records[dateKey];
+    if (!tasks.length) {
+      if (existing) {
+        const rest = { ...existing };
+        delete rest.tasks;
+        if (rest.type) {
+          user.records[dateKey] = rest;
+        } else {
+          delete user.records[dateKey];
+        }
+      }
+    } else {
+      user.records[dateKey] = { ...(existing || {}), tasks };
+    }
+    saveUser(user);
+  }
+
   function getVacationSettings(user, year) {
     const y = String(year);
     const existing = user.settings.vacationByYear[y];
@@ -173,6 +195,7 @@ window.Storage = (function () {
     getCurrentUser,
     saveUser,
     setRecord,
+    setDayTasks,
     deleteUser,
     getVacationSettings,
     saveVacationSettings,
