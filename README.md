@@ -22,9 +22,10 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
   - **Pregled po mjesecu** — hronološka lista svih dana u mjesecu koji imaju zadatke, uz bedž vrste dana i učinka pored datuma kad je taj dan evidentiran u "Unos dana", s brzim unosom (datum + tekst) na vrhu za dodavanje bez otvaranja godišnjeg prikaza.
   - Zadaci su isti podaci kao u "Unos dana" (dijele isto polje po danu) — dodavanje u jednoj kartici odmah je vidljivo u drugoj.
 - **Kartica "Raspored pločica"** — raspored markirnih pločica po odjelima:
-  - Korisnik dodaje odjele, a unutar svakog odjela projektante (radnike) kojima je dodijeljen raspon pločica.
-  - Za svakog radnika unosi se ime, te ili **broj pločica** direktno ili **broj paketa** (1 paket = 30 pločica, automatski preračunato). Početna pločica se predlaže kao nastavak posljednjeg radnika u odjelu (bez praznine), a može se ručno promijeniti.
-  - Radnici se prikazuju poredani po rasponu pločica, s ukupnim brojem i rasponom (od-do) po svakom. Ako se raspon dva radnika ne nastavlja bez praznine, ili se preklapa, prikazuje se upozorenje s tačnim brojevima nedodijeljenih pločica.
+  - Otvaranjem kartice prikazuje se **lista odjela** (kartice s nazivom i zbirom radnika/pločica) — dodavanje pločica i pregled rade se tek nakon klika na odjel, koji otvara njegove detalje (s dugmetom "‹ Svi odjeli" za povratak).
+  - Unutar odjela dodaju se projektanti (radnici) kojima je dodijeljen raspon pločica: ime, te ili **broj pločica** direktno ili **broj paketa** (1 paket = 30 pločica, automatski preračunato).
+  - Početna pločica se **automatski predlaže** kao nastavak posljednjeg radnika u odjelu (npr. nakon 10 paketa od pločice 1, sljedeća se sama predloži kao 301) — a po potrebi se može ručno promijeniti.
+  - Radnici se prikazuju poredani po rasponu pločica, od niže ka višoj, s ukupnim brojem i rasponom (od-do) po svakom. Ako se raspon dva radnika ne nastavlja bez praznine, ili se preklapa (dupliranje, koje ne smije postojati), prikazuje se upozorenje s tačnim brojevima — praznina je dozvoljena, dupliranje nije. Odjeli s upozorenjem imaju vidljivu oznaku i u samoj listi odjela, bez potrebe da se u njih uđe.
   - Odjeli i radnici se pojedinačno brišu; brisanje odjela traži potvrdu.
 - **Postavke godišnjeg odmora** — broj dana godišnjeg odmora po godini i datum od kojeg se koristi.
 - **Godišnji pregled** — cijela godina (12 mjeseci) prikazana na jednom listu, sa statistikom (ukupno radnih dana, ukupan broj stabala, površina, kilometraža vlaka, iskorišteni/preostali godišnji odmor...) i mogućnošću ispisa/PDF-a.

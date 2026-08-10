@@ -50,6 +50,7 @@ const state = {
   calendarYear: new Date().getFullYear(),
   calendarMonth: new Date().getMonth(),
   taskModalDateKey: null,
+  plociceOpenOdjelId: null,
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -1197,8 +1198,40 @@ function computeSuggestedStart(odjel) {
   return maxKrajnja + 1;
 }
 
+// Radnici poredani po redoslijedu pločica (ne po redoslijedu unosa) — tako se
+// praznine/preklapanja vide u prirodnom nizu, plus lista poruka upozorenja
+// (dijeljeno između kartice odjela i detaljnog prikaza).
+function computeOdjelIssues(odjel) {
+  const sorted = [...odjel.radnici].sort((a, b) => a.pocetna - b.pocetna);
+  const issues = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1];
+    const cur = sorted[i];
+    if (cur.pocetna > prev.krajnja + 1) {
+      issues.push({ id: cur.id, msg: `Praznina: pločice ${prev.krajnja + 1}–${cur.pocetna - 1} nisu dodijeljene nijednom radniku (prije "${cur.ime}").` });
+    } else if (cur.pocetna <= prev.krajnja) {
+      issues.push({ id: cur.id, msg: `Preklapanje: "${prev.ime}" (${prev.pocetna}–${prev.krajnja}) i "${cur.ime}" (${cur.pocetna}–${cur.krajnja}) dijele iste pločice.` });
+    }
+  }
+  return { sorted, issues };
+}
+
 function renderPlociceView() {
   const odjeli = getOdjeli(state.user);
+  const openOdjel = state.plociceOpenOdjelId ? odjeli.find((o) => o.id === state.plociceOpenOdjelId) : null;
+
+  $('#plociceListView').hidden = !!openOdjel;
+  $('#plociceDetailView').hidden = !openOdjel;
+
+  if (openOdjel) {
+    renderOdjelDetail(openOdjel);
+  } else {
+    state.plociceOpenOdjelId = null; // odjel je u međuvremenu obrisan — vrati se na listu
+    renderOdjeliCards(odjeli);
+  }
+}
+
+function renderOdjeliCards(odjeli) {
   const container = $('#odjeliList');
   container.innerHTML = '';
 
@@ -1207,82 +1240,106 @@ function renderPlociceView() {
     return;
   }
 
-  odjeli.forEach((odjel) => container.appendChild(renderOdjelPanel(odjel)));
+  odjeli.forEach((odjel) => {
+    const totalPlocica = odjel.radnici.reduce((sum, r) => sum + r.kolicina, 0);
+    const { issues } = computeOdjelIssues(odjel);
+
+    const card = document.createElement('div');
+    card.className = 'odjel-card';
+    card.tabIndex = 0;
+    card.setAttribute('role', 'button');
+
+    const main = document.createElement('div');
+    main.className = 'odjel-card-main';
+
+    const name = document.createElement('div');
+    name.className = 'odjel-card-name';
+    name.textContent = odjel.name;
+    if (issues.length) {
+      const warnIcon = document.createElement('span');
+      warnIcon.className = 'row-warn-icon';
+      warnIcon.textContent = '⚠️';
+      warnIcon.title = issues.map((i) => i.msg).join('\n');
+      name.appendChild(warnIcon);
+    }
+    main.appendChild(name);
+
+    const summary = document.createElement('div');
+    summary.className = 'odjel-card-summary';
+    summary.textContent = `${odjel.radnici.length} ${odjel.radnici.length === 1 ? 'radnik' : 'radnika'} · ${totalPlocica} pločica`;
+    main.appendChild(summary);
+
+    card.appendChild(main);
+
+    const actions = document.createElement('div');
+    actions.className = 'odjel-card-actions';
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'task-del';
+    delBtn.title = 'Obriši odjel';
+    delBtn.setAttribute('aria-label', 'Obriši odjel');
+    delBtn.textContent = '×';
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!confirm(`Obrisati odjel "${odjel.name}" i sve unose u njemu?`)) return;
+      deleteOdjel(state.user, odjel.id);
+      renderPlociceView();
+    });
+    actions.appendChild(delBtn);
+
+    const chevron = document.createElement('span');
+    chevron.className = 'odjel-card-chevron';
+    chevron.textContent = '›';
+    actions.appendChild(chevron);
+
+    card.appendChild(actions);
+
+    function open() {
+      state.plociceOpenOdjelId = odjel.id;
+      renderPlociceView();
+    }
+    card.addEventListener('click', open);
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        open();
+      }
+    });
+
+    container.appendChild(card);
+  });
 }
 
-function renderOdjelPanel(odjel) {
-  const panel = document.createElement('div');
-  panel.className = 'panel odjel-panel';
-
-  const header = document.createElement('div');
-  header.className = 'odjel-header';
-
-  const h3 = document.createElement('h3');
-  h3.textContent = odjel.name;
-  header.appendChild(h3);
-
-  const actions = document.createElement('div');
-  actions.className = 'odjel-header-actions';
+function renderOdjelDetail(odjel) {
+  $('#odjelDetailName').textContent = odjel.name;
 
   const totalPlocica = odjel.radnici.reduce((sum, r) => sum + r.kolicina, 0);
-  const summary = document.createElement('span');
-  summary.className = 'odjel-summary';
-  summary.textContent = `${odjel.radnici.length} ${odjel.radnici.length === 1 ? 'radnik' : 'radnika'} · ${totalPlocica} pločica`;
-  actions.appendChild(summary);
+  $('#odjelDetailSummary').textContent = `${odjel.radnici.length} ${odjel.radnici.length === 1 ? 'radnik' : 'radnika'} · ${totalPlocica} pločica`;
 
-  const delOdjelBtn = document.createElement('button');
-  delOdjelBtn.type = 'button';
-  delOdjelBtn.className = 'task-del';
-  delOdjelBtn.title = 'Obriši odjel';
-  delOdjelBtn.setAttribute('aria-label', 'Obriši odjel');
-  delOdjelBtn.textContent = '×';
-  delOdjelBtn.addEventListener('click', () => {
-    if (!confirm(`Obrisati odjel "${odjel.name}" i sve unose u njemu?`)) return;
-    deleteOdjel(state.user, odjel.id);
-    renderPlociceView();
-  });
-  actions.appendChild(delOdjelBtn);
+  const { sorted, issues } = computeOdjelIssues(odjel);
+  const rowWarnings = new Map(issues.map((i) => [i.id, i.msg]));
 
-  header.appendChild(actions);
-  panel.appendChild(header);
-
-  // Radnici prikazani po redoslijedu pločica (ne po redoslijedu unosa) — tako
-  // se praznine/preklapanja odmah vide u prirodnom nizu.
-  const sorted = [...odjel.radnici].sort((a, b) => a.pocetna - b.pocetna);
-  const rowWarnings = new Map();
-  const panelWarnings = [];
-
-  for (let i = 1; i < sorted.length; i++) {
-    const prev = sorted[i - 1];
-    const cur = sorted[i];
-    let msg = '';
-    if (cur.pocetna > prev.krajnja + 1) {
-      msg = `Praznina: pločice ${prev.krajnja + 1}–${cur.pocetna - 1} nisu dodijeljene nijednom radniku (prije "${cur.ime}").`;
-    } else if (cur.pocetna <= prev.krajnja) {
-      msg = `Preklapanje: "${prev.ime}" (${prev.pocetna}–${prev.krajnja}) i "${cur.ime}" (${cur.pocetna}–${cur.krajnja}) dijele iste pločice.`;
-    }
-    if (msg) {
-      rowWarnings.set(cur.id, msg);
-      panelWarnings.push(msg);
-    }
-  }
-
-  if (panelWarnings.length) {
+  const warnHost = $('#odjelDetailWarnings');
+  warnHost.innerHTML = '';
+  if (issues.length) {
     const warnBox = document.createElement('div');
     warnBox.className = 'plocice-warning';
     const icon = document.createElement('span');
     icon.textContent = '⚠️';
     warnBox.appendChild(icon);
     const textWrap = document.createElement('div');
-    panelWarnings.forEach((msg) => {
+    issues.forEach(({ msg }) => {
       const line = document.createElement('div');
       line.textContent = msg;
       textWrap.appendChild(line);
     });
     warnBox.appendChild(textWrap);
-    panel.appendChild(warnBox);
+    warnHost.appendChild(warnBox);
   }
 
+  const listHost = $('#odjelDetailList');
+  listHost.innerHTML = '';
   if (sorted.length) {
     const list = document.createElement('div');
     list.className = 'plocice-list';
@@ -1347,12 +1404,19 @@ function renderOdjelPanel(odjel) {
       list.appendChild(row);
     });
 
-    panel.appendChild(list);
+    listHost.appendChild(list);
   }
 
-  panel.appendChild(renderAddRadnikForm(odjel));
+  const formHost = $('#odjelDetailFormHost');
+  formHost.innerHTML = '';
+  formHost.appendChild(renderAddRadnikForm(odjel));
 
-  return panel;
+  $('#odjelDetailDeleteBtn').onclick = () => {
+    if (!confirm(`Obrisati odjel "${odjel.name}" i sve unose u njemu?`)) return;
+    deleteOdjel(state.user, odjel.id);
+    state.plociceOpenOdjelId = null;
+    renderPlociceView();
+  };
 }
 
 function renderAddRadnikForm(odjel) {
@@ -1452,6 +1516,11 @@ function initPlocice() {
     if (!name) return;
     addOdjel(state.user, name);
     input.value = '';
+    renderPlociceView();
+  });
+
+  $('#odjelBackBtn').addEventListener('click', () => {
+    state.plociceOpenOdjelId = null;
     renderPlociceView();
   });
 }

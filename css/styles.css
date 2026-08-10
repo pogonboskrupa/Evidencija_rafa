@@ -1316,8 +1316,6 @@ main {
 }
 .inline-add-form input { flex: 1; }
 
-.odjel-panel { margin-top: 18px; }
-
 .odjel-header {
   display: flex;
   align-items: center;
@@ -1329,6 +1327,32 @@ main {
 .odjel-header h3 { margin: 0; }
 .odjel-header-actions { display: flex; align-items: center; gap: 10px; }
 .odjel-summary { font-size: 12.5px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+
+/* Lista odjela: klikabilne kartice, kao ulaz u detalje pojedinog odjela. */
+.odjel-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.12s ease, box-shadow 0.12s ease;
+}
+.odjel-card:hover, .odjel-card:focus-visible { background: var(--primary-softer); box-shadow: var(--shadow-xs); }
+.odjel-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.odjel-card-main { min-width: 0; }
+.odjel-card-name { font-weight: 700; font-size: 15.5px; color: var(--primary-dark); }
+.odjel-card-summary { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
+.odjel-card-actions { display: flex; align-items: center; gap: 12px; flex: none; }
+.odjel-card-chevron { color: #b5c4ac; font-size: 16px; line-height: 1; }
+.odjel-card:hover .odjel-card-chevron { color: var(--primary); }
+
+.odjel-back-btn { margin-bottom: 14px; padding-left: 6px; padding-right: 10px; }
 
 .plocice-warning {
   display: flex;
