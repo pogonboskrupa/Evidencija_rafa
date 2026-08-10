@@ -23,7 +23,7 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
   - Zadaci su isti podaci kao u "Unos dana" (dijele isto polje po danu) — dodavanje u jednoj kartici odmah je vidljivo u drugoj.
 - **Kartica "Raspored pločica"** — raspored markirnih pločica po odjelima:
   - Otvaranjem kartice prikazuje se **lista odjela** (kartice s nazivom i zbirom radnika/pločica) — dodavanje pločica i pregled rade se tek nakon klika na odjel, koji otvara njegove detalje (s dugmetom "‹ Svi odjeli" za povratak).
-  - Unutar odjela dodaju se projektanti (radnici) kojima je dodijeljen raspon pločica: ime, te ili **broj pločica** direktno ili **broj paketa** (1 paket = 30 pločica, automatski preračunato).
+  - Unutar odjela dodaju se projektanti (radnici) kojima je dodijeljen raspon pločica: ime, te ili **broj pločica** direktno ili **broj paketa** (1 paket = 30 pločica, automatski preračunato), kao i **datum zaduženja** (podrazumijevano današnji dan, može se promijeniti za naknadni/stariji unos).
   - Početna pločica se **automatski predlaže** kao nastavak posljednjeg radnika u odjelu (npr. nakon 10 paketa od pločice 1, sljedeća se sama predloži kao 301) — a po potrebi se može ručno promijeniti.
   - Radnici se prikazuju poredani po rasponu pločica, od niže ka višoj, s ukupnim brojem i rasponom (od-do) po svakom. Ako se raspon dva radnika ne nastavlja bez praznine, ili se preklapa (dupliranje, koje ne smije postojati), prikazuje se upozorenje s tačnim brojevima — praznina je dozvoljena, dupliranje nije. Odjeli s upozorenjem imaju vidljivu oznaku i u samoj listi odjela, bez potrebe da se u njih uđe.
   - Odjeli i radnici se pojedinačno brišu; brisanje odjela traži potvrdu.

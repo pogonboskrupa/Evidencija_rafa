@@ -1406,6 +1406,7 @@ main {
 .col-raspon { width: 140px; flex: none; font-variant-numeric: tabular-nums; color: var(--text-soft); }
 .col-kolicina { width: 110px; flex: none; color: var(--text-soft); }
 .col-paketi { width: 90px; flex: none; color: var(--text-muted); }
+.col-datum { width: 100px; flex: none; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .col-del { width: 24px; flex: none; text-align: right; }
 
 .row-warn-icon { margin-left: 4px; cursor: help; }
@@ -1613,7 +1614,7 @@ main {
   .plocice-row { flex-wrap: wrap; row-gap: 4px; padding: 10px 14px; }
   .col-radnik { flex: 1 1 auto; order: 1; }
   .col-del { order: 2; }
-  .col-raspon, .col-kolicina, .col-paketi {
+  .col-raspon, .col-kolicina, .col-paketi, .col-datum {
     order: 3;
     width: auto;
     font-size: 12px;

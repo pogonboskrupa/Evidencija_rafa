@@ -214,9 +214,10 @@ window.Storage = (function () {
     saveUser(user);
   }
 
-  // { ime, pocetna, kolicina, brojPaketa } — brojPaketa je null kad je unos
-  // bio direktno u pločicama (ne preko paketa).
-  function addRadnikToOdjel(user, odjelId, { ime, pocetna, kolicina, brojPaketa }) {
+  // { ime, pocetna, kolicina, brojPaketa, datum } — brojPaketa je null kad je
+  // unos bio direktno u pločicama (ne preko paketa); datum (YYYY-MM-DD) je dan
+  // zaduženja, null ako nije unesen (npr. stariji zapisi).
+  function addRadnikToOdjel(user, odjelId, { ime, pocetna, kolicina, brojPaketa, datum }) {
     const odjel = getOdjeli(user).find((o) => o.id === odjelId);
     if (!odjel) return null;
     const radnik = {
@@ -226,6 +227,7 @@ window.Storage = (function () {
       kolicina,
       krajnja: pocetna + kolicina - 1,
       brojPaketa: brojPaketa || null,
+      datum: datum || null,
     };
     odjel.radnici.push(radnik);
     saveUser(user);

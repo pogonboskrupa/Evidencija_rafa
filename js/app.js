@@ -64,6 +64,12 @@ function daysInMonth(y, m) {
   return new Date(y, m + 1, 0).getDate();
 }
 
+// "YYYY-MM-DD" -> "d.m.yyyy." (kompaktan format za uske kolone tabela).
+function formatDateShort(dateKey) {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  return `${d}.${m}.${y}.`;
+}
+
 // Monday = 0 ... Sunday = 6
 function mondayIndex(jsDay) {
   return (jsDay + 6) % 7;
@@ -1351,6 +1357,7 @@ function renderOdjelDetail(odjel) {
       <span class="col-raspon">Raspon pločica</span>
       <span class="col-kolicina">Broj pločica</span>
       <span class="col-paketi">Paketi</span>
+      <span class="col-datum">Datum</span>
       <span class="col-del"></span>`;
     list.appendChild(listHeader);
 
@@ -1385,6 +1392,11 @@ function renderOdjelDetail(odjel) {
       paketiCol.className = 'col-paketi';
       paketiCol.textContent = radnik.brojPaketa ? `${radnik.brojPaketa} pak.` : '—';
       row.appendChild(paketiCol);
+
+      const datumCol = document.createElement('span');
+      datumCol.className = 'col-datum';
+      datumCol.textContent = radnik.datum ? formatDateShort(radnik.datum) : '—';
+      row.appendChild(datumCol);
 
       const delCol = document.createElement('span');
       delCol.className = 'col-del';
@@ -1444,6 +1456,10 @@ function renderAddRadnikForm(odjel) {
       <label class="radnik-kolicina-label">Broj paketa</label>
       <input type="text" inputmode="numeric" class="radnik-kolicina-input" autocomplete="off" placeholder="npr. 10" />
     </div>
+    <div class="field">
+      <label>Datum zaduženja</label>
+      <input type="date" class="radnik-datum-input" />
+    </div>
     <div class="num-keypad-host plocice-keypad-host"></div>
     <div class="plocice-preview"></div>
     <div><button type="submit" class="btn btn-secondary">Dodaj radnika</button></div>
@@ -1453,11 +1469,14 @@ function renderAddRadnikForm(odjel) {
   const pocetnaInput = form.querySelector('.radnik-pocetna-input');
   const kolicinaInput = form.querySelector('.radnik-kolicina-input');
   const kolicinaLabel = form.querySelector('.radnik-kolicina-label');
+  const datumInput = form.querySelector('.radnik-datum-input');
   const preview = form.querySelector('.plocice-preview');
   const keypadHost = form.querySelector('.plocice-keypad-host');
   const modeRadios = form.querySelectorAll(`input[name="${modeName}"]`);
 
   pocetnaInput.value = String(computeSuggestedStart(odjel));
+  const today = new Date();
+  datumInput.value = toKey(today.getFullYear(), today.getMonth(), today.getDate());
 
   attachNumberField(pocetnaInput, { hostEl: keypadHost, label: 'Početna pločica' });
   attachNumberField(kolicinaInput, { hostEl: keypadHost, label: 'Broj paketa' });
@@ -1501,6 +1520,7 @@ function renderAddRadnikForm(odjel) {
       pocetna,
       kolicina,
       brojPaketa: mode === 'paketi' ? rawKolicina : null,
+      datum: datumInput.value || null,
     });
     renderPlociceView();
   });
