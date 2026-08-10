@@ -1479,7 +1479,10 @@ function renderAddRadnikForm(odjel) {
   datumInput.value = toKey(today.getFullYear(), today.getMonth(), today.getDate());
 
   attachNumberField(pocetnaInput, { hostEl: keypadHost, label: 'Početna pločica' });
-  attachNumberField(kolicinaInput, { hostEl: keypadHost, label: 'Broj paketa' });
+  // "Gotovo" na broju paketa/pločica je posljednji korak unosa — odmah
+  // potvrđuje formu (isto kao klik na "Dodaj radnika"), umjesto da korisnik
+  // mora zatvoriti tastaturu pa dodatno kliknuti dugme za potvrdu.
+  attachNumberField(kolicinaInput, { hostEl: keypadHost, label: 'Broj paketa', onDone: () => form.requestSubmit() });
 
   function currentMode() {
     return [...modeRadios].find((r) => r.checked)?.value || 'paketi';

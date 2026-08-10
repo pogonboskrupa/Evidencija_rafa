@@ -180,7 +180,11 @@ window.Keypad = (function () {
   //   ili grupe polja); više polja može dijeliti isti hostEl.
   // decimal: dozvoljava tačku (npr. površina, km); broj stabala je cio broj.
   // label: kratak naziv polja prikazan iznad panela (npr. "Površina (ha)").
-  function attachNumberField(input, { hostEl, decimal = false, label = '' }) {
+  // onDone: opciono — poziva se nakon zatvaranja panela klikom na "Gotovo" ili
+  //   fizičkom tipkom Enter. Koristi se kod polja koje je zadnje u kratkoj
+  //   formi (npr. broj paketa), da "Gotovo" odmah potvrdi cijelu formu umjesto
+  //   da korisnik mora dodatno kliknuti na dugme za potvrdu.
+  function attachNumberField(input, { hostEl, decimal = false, label = '', onDone = null }) {
     input.readOnly = true;
     input.setAttribute('inputmode', 'none');
     input.classList.add('num-field');
@@ -224,7 +228,10 @@ window.Keypad = (function () {
       done.type = 'button';
       done.className = 'btn btn-secondary num-keypad-done';
       done.textContent = 'Gotovo';
-      done.addEventListener('click', closeActivePanel);
+      done.addEventListener('click', () => {
+        closeActivePanel();
+        if (onDone) onDone();
+      });
       hostEl.appendChild(done);
     }
 
@@ -250,6 +257,10 @@ window.Keypad = (function () {
       } else if (decimal && e.key === '.') {
         e.preventDefault();
         appendDecimalPoint(input);
+      } else if (e.key === 'Enter' && onDone) {
+        e.preventDefault();
+        closeActivePanel();
+        onDone();
       } else if (e.key === 'Tab' || e.key === 'Escape') {
         // dozvoli standardnu navigaciju/zatvaranje modala
       } else {
