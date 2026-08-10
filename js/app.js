@@ -20,11 +20,16 @@ const {
   deleteUser,
   getVacationSettings,
   saveVacationSettings,
+  getNotificationsEnabled,
+  setNotificationsEnabled,
+  exportUserData,
+  importUserData,
   PLOCICE_PAKET_SIZE,
   getOdjeli,
   addOdjel,
   deleteOdjel,
   addRadnikToOdjel,
+  updateRadnikInOdjel,
   deleteRadnikFromOdjel,
 } = window.Storage;
 const { computeYearStats } = window.Stats;
@@ -51,6 +56,7 @@ const state = {
   calendarMonth: new Date().getMonth(),
   taskModalDateKey: null,
   plociceOpenOdjelId: null,
+  plociceEditingRadnikId: null,
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -267,6 +273,7 @@ function enterApp(user) {
   renderLegends();
   switchView('entry');
   renderEntryView();
+  maybeShowTaskReminder();
 }
 
 function logout() {
@@ -1235,6 +1242,79 @@ function renderPlociceView() {
     state.plociceOpenOdjelId = null; // odjel je u međuvremenu obrisan — vrati se na listu
     renderOdjeliCards(odjeli);
   }
+
+  renderPlocicePrintView(odjeli);
+}
+
+// Sakriven na ekranu (.print-only), vidljiv samo pri ispisu (@media print) —
+// prikazuje SVE odjele s punim tabelama odjednom, bez obzira na to je li
+// ekran trenutno na listi ili unutar jednog odjela.
+function renderPlocicePrintView(odjeli) {
+  const container = $('#plocicePrintView');
+  container.innerHTML = '';
+
+  const h2 = document.createElement('h2');
+  h2.textContent = 'Raspored pločica';
+  container.appendChild(h2);
+
+  if (!odjeli.length) {
+    const p = document.createElement('p');
+    p.textContent = 'Nema dodanih odjela.';
+    container.appendChild(p);
+    return;
+  }
+
+  odjeli.forEach((odjel) => {
+    const { sorted, issues } = computeOdjelIssues(odjel);
+    const totalPlocica = odjel.radnici.reduce((sum, r) => sum + r.kolicina, 0);
+
+    const section = document.createElement('div');
+    section.className = 'print-odjel-section';
+
+    const h3 = document.createElement('h3');
+    h3.textContent = `${odjel.name} — ${odjel.radnici.length} ${odjel.radnici.length === 1 ? 'radnik' : 'radnika'}, ${totalPlocica} pločica`;
+    section.appendChild(h3);
+
+    if (issues.length) {
+      const warn = document.createElement('div');
+      warn.className = 'plocice-warning';
+      issues.forEach(({ msg }) => {
+        const line = document.createElement('div');
+        line.textContent = `⚠ ${msg}`;
+        warn.appendChild(line);
+      });
+      section.appendChild(warn);
+    }
+
+    if (sorted.length) {
+      const table = document.createElement('table');
+      table.className = 'print-plocice-table';
+
+      const thead = document.createElement('thead');
+      thead.innerHTML = '<tr><th>Radnik</th><th>Raspon pločica</th><th>Broj pločica</th><th>Paketi</th><th>Datum</th></tr>';
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      sorted.forEach((r) => {
+        const tr = document.createElement('tr');
+        [r.ime, `${r.pocetna}–${r.krajnja}`, `${r.kolicina}`, r.brojPaketa ? `${r.brojPaketa}` : '—', r.datum ? formatDateShort(r.datum) : '—']
+          .forEach((text) => {
+            const td = document.createElement('td');
+            td.textContent = text;
+            tr.appendChild(td);
+          });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      section.appendChild(table);
+    } else {
+      const p = document.createElement('p');
+      p.textContent = 'Nema unesenih radnika.';
+      section.appendChild(p);
+    }
+
+    container.appendChild(section);
+  });
 }
 
 function renderOdjeliCards(odjeli) {
@@ -1358,13 +1438,15 @@ function renderOdjelDetail(odjel) {
       <span class="col-kolicina">Broj pločica</span>
       <span class="col-paketi">Paketi</span>
       <span class="col-datum">Datum</span>
-      <span class="col-del"></span>`;
+      <span class="col-actions"></span>`;
     list.appendChild(listHeader);
 
     sorted.forEach((radnik) => {
       const warning = rowWarnings.get(radnik.id);
       const row = document.createElement('div');
-      row.className = 'plocice-row' + (warning ? ' has-gap' : '');
+      row.className = 'plocice-row'
+        + (warning ? ' has-gap' : '')
+        + (radnik.id === state.plociceEditingRadnikId ? ' is-editing' : '');
 
       const radnikCol = document.createElement('span');
       radnikCol.className = 'col-radnik';
@@ -1398,8 +1480,21 @@ function renderOdjelDetail(odjel) {
       datumCol.textContent = radnik.datum ? formatDateShort(radnik.datum) : '—';
       row.appendChild(datumCol);
 
-      const delCol = document.createElement('span');
-      delCol.className = 'col-del';
+      const actionsCol = document.createElement('span');
+      actionsCol.className = 'col-actions';
+
+      const editRadnikBtn = document.createElement('button');
+      editRadnikBtn.type = 'button';
+      editRadnikBtn.className = 'task-del';
+      editRadnikBtn.title = 'Izmijeni radnika';
+      editRadnikBtn.setAttribute('aria-label', 'Izmijeni radnika');
+      editRadnikBtn.textContent = '✎';
+      editRadnikBtn.addEventListener('click', () => {
+        state.plociceEditingRadnikId = radnik.id;
+        renderPlociceView();
+      });
+      actionsCol.appendChild(editRadnikBtn);
+
       const delRadnikBtn = document.createElement('button');
       delRadnikBtn.type = 'button';
       delRadnikBtn.className = 'task-del';
@@ -1408,10 +1503,12 @@ function renderOdjelDetail(odjel) {
       delRadnikBtn.textContent = '×';
       delRadnikBtn.addEventListener('click', () => {
         deleteRadnikFromOdjel(state.user, odjel.id, radnik.id);
+        if (state.plociceEditingRadnikId === radnik.id) state.plociceEditingRadnikId = null;
         renderPlociceView();
       });
-      delCol.appendChild(delRadnikBtn);
-      row.appendChild(delCol);
+      actionsCol.appendChild(delRadnikBtn);
+
+      row.appendChild(actionsCol);
 
       list.appendChild(row);
     });
@@ -1427,16 +1524,23 @@ function renderOdjelDetail(odjel) {
     if (!confirm(`Obrisati odjel "${odjel.name}" i sve unose u njemu?`)) return;
     deleteOdjel(state.user, odjel.id);
     state.plociceOpenOdjelId = null;
+    state.plociceEditingRadnikId = null;
     renderPlociceView();
   };
 }
 
 function renderAddRadnikForm(odjel) {
+  const editingRadnik = state.plociceEditingRadnikId
+    ? odjel.radnici.find((r) => r.id === state.plociceEditingRadnikId)
+    : null;
+
   const form = document.createElement('form');
   form.className = 'plocice-add-form';
 
   const modeName = `plocice-mode-${odjel.id}`;
+  const startMode = editingRadnik && !editingRadnik.brojPaketa ? 'plocice' : 'paketi';
   form.innerHTML = `
+    <h4 class="plocice-form-title"></h4>
     <div class="field">
       <label>Ime radnika</label>
       <input type="text" class="radnik-ime-input" maxlength="80" placeholder="Ime i prezime" required />
@@ -1444,8 +1548,8 @@ function renderAddRadnikForm(odjel) {
     <div class="field">
       <label>Način unosa</label>
       <div class="plocice-mode-toggle">
-        <label><input type="radio" name="${modeName}" value="paketi" checked /> Broj paketa</label>
-        <label><input type="radio" name="${modeName}" value="plocice" /> Broj pločica</label>
+        <label><input type="radio" name="${modeName}" value="paketi" ${startMode === 'paketi' ? 'checked' : ''} /> Broj paketa</label>
+        <label><input type="radio" name="${modeName}" value="plocice" ${startMode === 'plocice' ? 'checked' : ''} /> Broj pločica</label>
       </div>
     </div>
     <div class="field">
@@ -1462,9 +1566,12 @@ function renderAddRadnikForm(odjel) {
     </div>
     <div class="num-keypad-host plocice-keypad-host"></div>
     <div class="plocice-preview"></div>
-    <div><button type="submit" class="btn btn-secondary">Dodaj radnika</button></div>
+    <div class="plocice-form-actions">
+      <button type="submit" class="btn btn-secondary"></button>
+    </div>
   `;
 
+  const formTitle = form.querySelector('.plocice-form-title');
   const imeInput = form.querySelector('.radnik-ime-input');
   const pocetnaInput = form.querySelector('.radnik-pocetna-input');
   const kolicinaInput = form.querySelector('.radnik-kolicina-input');
@@ -1473,15 +1580,39 @@ function renderAddRadnikForm(odjel) {
   const preview = form.querySelector('.plocice-preview');
   const keypadHost = form.querySelector('.plocice-keypad-host');
   const modeRadios = form.querySelectorAll(`input[name="${modeName}"]`);
+  const submitBtn = form.querySelector('button[type=submit]');
+  const actionsHost = form.querySelector('.plocice-form-actions');
 
-  pocetnaInput.value = String(computeSuggestedStart(odjel));
   const today = new Date();
-  datumInput.value = toKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const todayKey = toKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+  if (editingRadnik) {
+    formTitle.textContent = `Izmjena: ${editingRadnik.ime}`;
+    imeInput.value = editingRadnik.ime;
+    pocetnaInput.value = String(editingRadnik.pocetna);
+    datumInput.value = editingRadnik.datum || todayKey;
+    submitBtn.textContent = 'Spremi izmjene';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'btn btn-ghost';
+    cancelBtn.textContent = 'Otkaži izmjenu';
+    cancelBtn.addEventListener('click', () => {
+      state.plociceEditingRadnikId = null;
+      renderPlociceView();
+    });
+    actionsHost.appendChild(cancelBtn);
+  } else {
+    formTitle.remove();
+    pocetnaInput.value = String(computeSuggestedStart(odjel));
+    datumInput.value = todayKey;
+    submitBtn.textContent = 'Dodaj radnika';
+  }
 
   attachNumberField(pocetnaInput, { hostEl: keypadHost, label: 'Početna pločica' });
   // "Gotovo" na broju paketa/pločica je posljednji korak unosa — odmah
-  // potvrđuje formu (isto kao klik na "Dodaj radnika"), umjesto da korisnik
-  // mora zatvoriti tastaturu pa dodatno kliknuti dugme za potvrdu.
+  // potvrđuje formu (isto kao klik na dugme), umjesto da korisnik mora
+  // zatvoriti tastaturu pa dodatno kliknuti dugme za potvrdu.
   attachNumberField(kolicinaInput, { hostEl: keypadHost, label: 'Broj paketa', onDone: () => form.requestSubmit() });
 
   function currentMode() {
@@ -1505,6 +1636,13 @@ function renderAddRadnikForm(odjel) {
     preview.textContent = `Raspon: ${pocetna}–${krajnja} · ${kolicina} pločica${paketiText}`;
   }
 
+  // Broj paketa/pločica polje se popunjava tek nakon attachNumberField (koje
+  // ga postavlja na readOnly), pa se kod izmjene postavlja ovdje preko iste
+  // pomoćne funkcije koju koristi i tipkovnica (dispatch-uje "input" event).
+  if (editingRadnik) {
+    kolicinaInput.value = String(startMode === 'paketi' ? editingRadnik.brojPaketa : editingRadnik.kolicina);
+  }
+
   modeRadios.forEach((r) => r.addEventListener('change', updatePreview));
   pocetnaInput.addEventListener('input', updatePreview);
   kolicinaInput.addEventListener('input', updatePreview);
@@ -1518,13 +1656,19 @@ function renderAddRadnikForm(odjel) {
     if (!ime || !pocetna || !rawKolicina || rawKolicina <= 0) return;
     const mode = currentMode();
     const kolicina = mode === 'paketi' ? rawKolicina * PLOCICE_PAKET_SIZE : rawKolicina;
-    addRadnikToOdjel(state.user, odjel.id, {
+    const payload = {
       ime,
       pocetna,
       kolicina,
       brojPaketa: mode === 'paketi' ? rawKolicina : null,
       datum: datumInput.value || null,
-    });
+    };
+    if (editingRadnik) {
+      updateRadnikInOdjel(state.user, odjel.id, editingRadnik.id, payload);
+    } else {
+      addRadnikToOdjel(state.user, odjel.id, payload);
+    }
+    state.plociceEditingRadnikId = null;
     renderPlociceView();
   });
 
@@ -1544,8 +1688,11 @@ function initPlocice() {
 
   $('#odjelBackBtn').addEventListener('click', () => {
     state.plociceOpenOdjelId = null;
+    state.plociceEditingRadnikId = null;
     renderPlociceView();
   });
+
+  $('#plocicePrintBtn').addEventListener('click', () => window.print());
 }
 
 /* ==================== POSTAVKE ==================== */
@@ -1576,9 +1723,141 @@ function loadSettingsForYear() {
   $('#settingsSaved').hidden = true;
 }
 
+/* ==================== SIGURNOSNA KOPIJA ==================== */
+
+function downloadJSON(filename, dataObj) {
+  const blob = new Blob([JSON.stringify(dataObj, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportCurrentUser() {
+  const today = new Date();
+  const dateStr = toKey(today.getFullYear(), today.getMonth(), today.getDate());
+  downloadJSON(`evidencija-rada-${state.user.username}-${dateStr}.json`, exportUserData(state.user));
+}
+
+function showImportStatus(text, isError) {
+  const el = $('#importDataStatus');
+  el.hidden = !text;
+  el.textContent = text;
+  el.classList.toggle('error', !!isError);
+}
+
+async function importFromFile(file) {
+  let raw;
+  try {
+    raw = JSON.parse(await file.text());
+  } catch {
+    showImportStatus('Datoteka nije validan JSON.', true);
+    return;
+  }
+
+  let imported;
+  try {
+    imported = importUserData(raw, { overwrite: false });
+  } catch (err) {
+    if (err.code === 'exists') {
+      if (!confirm(`Korisnik "${raw.username}" već postoji na ovom uređaju. Prepisati ga podacima iz datoteke?`)) return;
+      try {
+        imported = importUserData(raw, { overwrite: true });
+      } catch (err2) {
+        showImportStatus(err2.message, true);
+        return;
+      }
+    } else {
+      showImportStatus(err.message, true);
+      return;
+    }
+  }
+
+  // Ako uvezena datoteka pripada trenutno prijavljenom korisniku, njegovi
+  // podaci u memoriji se odmah osvježe da se izmjena vidi bez ponovne prijave.
+  if (state.user && imported.username === state.user.username) {
+    state.user = imported;
+    switchView('entry');
+  }
+  showImportStatus(`Podaci za korisnika "${imported.username}" su uspješno uvezeni.`, false);
+}
+
+/* ==================== PODSJETNICI (Notification API) ==================== */
+
+function pendingTaskCount() {
+  const todayKey = toKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+  let count = 0;
+  Object.entries(state.user.records).forEach(([key, rec]) => {
+    if (key > todayKey) return; // budući zadaci još nisu "dospjeli"
+    (rec.tasks || []).forEach((t) => { if (!t.done) count += 1; });
+  });
+  return count;
+}
+
+// Najviše jednom dnevno po korisniku (localStorage flag) — poziva se pri
+// prijavi i periodično dok je aplikacija otvorena, jer nema pozadinskog
+// push servera koji bi mogao obavijestiti dok je aplikacija zatvorena.
+function maybeShowTaskReminder() {
+  if (!state.user) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!getNotificationsEnabled(state.user)) return;
+
+  const todayKey = toKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+  const flagKey = `evidencija_rafa_notified_${state.user.username}`;
+  if (localStorage.getItem(flagKey) === todayKey) return;
+
+  const count = pendingTaskCount();
+  if (!count) return;
+
+  try {
+    const n = new Notification('Evidencija rada — podsjetnik', {
+      body: `Imate ${count} ${count === 1 ? 'nezavršen zadatak' : 'nezavršenih zadataka'} (uključujući rokove do danas).`,
+      icon: 'icons/icon-192.png',
+      tag: 'evidencija-rafa-tasks',
+    });
+    n.onclick = () => {
+      window.focus();
+      n.close();
+    };
+  } catch {
+    // neki pregledi/konteksti odbiju konstrukciju i pored "granted" dozvole
+  }
+  localStorage.setItem(flagKey, todayKey);
+}
+
+function refreshNotificationsUI() {
+  const toggle = $('#notificationsToggle');
+  const supported = 'Notification' in window;
+  toggle.disabled = !supported;
+
+  const statusEl = $('#notificationsStatus');
+  if (!supported) {
+    toggle.checked = false;
+    statusEl.hidden = false;
+    statusEl.textContent = 'Ovaj preglednik ne podržava obavijesti.';
+    return;
+  }
+
+  const enabled = getNotificationsEnabled(state.user);
+  toggle.checked = enabled && Notification.permission === 'granted';
+
+  if (enabled && Notification.permission !== 'granted') {
+    statusEl.hidden = false;
+    statusEl.textContent = 'Dozvola za obavijesti nije data u pregledniku — uključite je u postavkama preglednika.';
+  } else {
+    statusEl.hidden = true;
+  }
+}
+
 function renderSettingsView() {
   populateSettingsYears();
   loadSettingsForYear();
+  refreshNotificationsUI();
+  showImportStatus('', false);
 }
 
 function initSettings() {
@@ -1592,6 +1871,37 @@ function initSettings() {
     const validFrom = $('#vacationFrom').value || `${year}-01-01`;
     saveVacationSettings(state.user, year, { days, validFrom });
     $('#settingsSaved').hidden = false;
+  });
+
+  $('#exportDataBtn').addEventListener('click', exportCurrentUser);
+  $('#importDataBtn').addEventListener('click', () => $('#importDataInput').click());
+  $('#importDataInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    e.target.value = ''; // omogući ponovni odabir iste datoteke kasnije
+    if (file) await importFromFile(file);
+  });
+
+  $('#notificationsToggle').addEventListener('change', async (e) => {
+    const toggle = e.target;
+    if (!('Notification' in window)) {
+      toggle.checked = false;
+      return;
+    }
+
+    if (toggle.checked) {
+      let permission = Notification.permission;
+      if (permission === 'default') permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        setNotificationsEnabled(state.user, false);
+        refreshNotificationsUI();
+        return;
+      }
+      setNotificationsEnabled(state.user, true);
+      maybeShowTaskReminder();
+    } else {
+      setNotificationsEnabled(state.user, false);
+    }
+    refreshNotificationsUI();
   });
 
   $('#deleteAccountBtn').addEventListener('click', () => {
@@ -1614,6 +1924,12 @@ function init() {
   initCalendarNav();
   initPlocice();
   initSettings();
+
+  // Nema pozadinskog push servera — dok je aplikacija otvorena, periodično se
+  // provjerava da li dan/zadaci opravdavaju podsjetnik (npr. ponoć je prošla
+  // dok je kartica ostala otvorena). maybeShowTaskReminder sam ograničava na
+  // najviše jednom dnevno i preskače ako korisnik/dozvola nisu spremni.
+  setInterval(maybeShowTaskReminder, 15 * 60 * 1000);
 
   const session = getSession();
   if (session) {

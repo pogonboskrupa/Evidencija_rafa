@@ -185,6 +185,58 @@ window.Storage = (function () {
     saveUser(user);
   }
 
+  function getNotificationsEnabled(user) {
+    return !!user.settings.notifications;
+  }
+
+  function setNotificationsEnabled(user, enabled) {
+    user.settings.notifications = !!enabled;
+    saveUser(user);
+  }
+
+  /* ==================== SIGURNOSNA KOPIJA (izvoz/uvoz) ====================
+     Cijeli korisnički zapis (uključujući salt/pinHash — bez toga se PIN nakon
+     uvoza ne bi mogao provjeriti) izvozi se kao JSON. Uvoz upisuje isti zapis
+     natrag u bazu; ako korisničko ime već postoji, poziv se mora eksplicitno
+     ponoviti sa overwrite:true (UI to traži potvrdom od korisnika). */
+
+  function exportUserData(user) {
+    // Strukturalni klon (JSON round-trip) — izvezena kopija ne smije dijeliti
+    // reference s objektom koji ostaje u memoriji/bazi.
+    return JSON.parse(JSON.stringify(user));
+  }
+
+  function importUserData(raw, { overwrite = false } = {}) {
+    if (!raw || typeof raw !== 'object') throw new Error('Datoteka nije validna sigurnosna kopija.');
+    const username = typeof raw.username === 'string' ? raw.username.trim().toLowerCase() : '';
+    if (!username || typeof raw.salt !== 'string' || typeof raw.pinHash !== 'string' || typeof raw.records !== 'object') {
+      throw new Error('Datoteka nije validna sigurnosna kopija.');
+    }
+
+    const db = loadDB();
+    if (db.users[username] && !overwrite) {
+      const err = new Error('Korisnik s tim imenom već postoji na ovom uređaju.');
+      err.code = 'exists';
+      throw err;
+    }
+
+    const user = {
+      username,
+      fullName: typeof raw.fullName === 'string' && raw.fullName.trim() ? raw.fullName.trim() : username,
+      salt: raw.salt,
+      pinHash: raw.pinHash,
+      createdAt: raw.createdAt || new Date().toISOString(),
+      settings: raw.settings && typeof raw.settings === 'object' ? raw.settings : { vacationByYear: {} },
+      records: raw.records && typeof raw.records === 'object' ? raw.records : {},
+      plocice: raw.plocice && typeof raw.plocice === 'object' ? raw.plocice : { odjeli: [] },
+    };
+    if (!user.settings.vacationByYear) user.settings.vacationByYear = {};
+
+    db.users[username] = user;
+    saveDB(db);
+    return user;
+  }
+
   /* ==================== RASPORED PLOČICA ====================
      Raspored po odjelima: svaki odjel ima listu radnika (projektanata) kojima
      je dodijeljen raspon markirnih pločica (od-do), unesen direktno kao broj
@@ -241,6 +293,23 @@ window.Storage = (function () {
     saveUser(user);
   }
 
+  // Izmjena postojećeg unosa (isti oblik podataka kao addRadnikToOdjel) — id i
+  // odjel ostaju nepromijenjeni, ostala polja se zamjenjuju u cijelosti.
+  function updateRadnikInOdjel(user, odjelId, radnikId, { ime, pocetna, kolicina, brojPaketa, datum }) {
+    const odjel = getOdjeli(user).find((o) => o.id === odjelId);
+    if (!odjel) return null;
+    const radnik = odjel.radnici.find((r) => r.id === radnikId);
+    if (!radnik) return null;
+    radnik.ime = ime.trim();
+    radnik.pocetna = pocetna;
+    radnik.kolicina = kolicina;
+    radnik.krajnja = pocetna + kolicina - 1;
+    radnik.brojPaketa = brojPaketa || null;
+    radnik.datum = datum || null;
+    saveUser(user);
+    return radnik;
+  }
+
   return {
     DAY_TYPES,
     RADNI_SUBTIPOVI,
@@ -258,11 +327,16 @@ window.Storage = (function () {
     deleteUser,
     getVacationSettings,
     saveVacationSettings,
+    getNotificationsEnabled,
+    setNotificationsEnabled,
+    exportUserData,
+    importUserData,
     PLOCICE_PAKET_SIZE,
     getOdjeli,
     addOdjel,
     deleteOdjel,
     addRadnikToOdjel,
+    updateRadnikInOdjel,
     deleteRadnikFromOdjel,
   };
 })();

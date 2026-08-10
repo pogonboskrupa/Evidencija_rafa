@@ -193,7 +193,10 @@
           <!-- Lista odjela -->
           <div id="plociceListView">
             <div class="panel">
-              <h3>Raspored pločica</h3>
+              <div class="panel-header">
+                <h3>Raspored pločica</h3>
+                <button id="plocicePrintBtn" class="btn btn-secondary no-print" type="button">Ispis / PDF</button>
+              </div>
               <p class="form-hint">Dodajte odjel, pa uđite u njega da unutra dodajete projektante i pločice ili pakete koje su zadužili (1 paket = 30 pločica).</p>
               <form id="addOdjelForm" class="inline-add-form">
                 <input id="newOdjelName" type="text" maxlength="80" placeholder="Naziv odjela (npr. Odjel 12)" required />
@@ -203,6 +206,10 @@
 
             <div id="odjeliList"></div>
           </div>
+
+          <!-- Prikaz samo za ispis: svi odjeli s punim tabelama odjednom, bez
+               obzira na to je li ekran trenutno na listi ili unutar odjela. -->
+          <div id="plocicePrintView" class="print-only"></div>
 
           <!-- Detalji jednog odjela -->
           <div id="plociceDetailView" hidden>
@@ -268,6 +275,27 @@
               <div class="num-keypad-host settings-num-keypad-host" id="vacationDaysKeypadHost"></div>
             </form>
             <div id="settingsSaved" class="settings-note" style="margin-top:14px;" hidden>Postavke su spremljene.</div>
+          </div>
+
+          <div class="panel">
+            <h3>Sigurnosna kopija</h3>
+            <p class="form-hint" style="margin-bottom:16px;">Svi podaci žive samo u ovom pregledniku na ovom uređaju. Redovno izvezite kopiju kako ih ne biste izgubili (npr. prije brisanja podataka preglednika ili promjene uređaja).</p>
+            <div class="backup-actions">
+              <button id="exportDataBtn" class="btn btn-secondary" type="button">Izvezi podatke</button>
+              <button id="importDataBtn" class="btn btn-secondary" type="button">Uvezi podatke</button>
+              <input id="importDataInput" type="file" accept="application/json" hidden />
+            </div>
+            <p id="importDataStatus" class="settings-note" style="margin-top:12px;" hidden></p>
+          </div>
+
+          <div class="panel">
+            <h3>Podsjetnici</h3>
+            <p class="form-hint" style="margin-bottom:16px;">Uz dozvolu preglednika, aplikacija može prikazati obavijest o nezavršenim zadacima i rokovima kad je otvorena (jednom dnevno).</p>
+            <label class="checkbox-row" style="margin:0;">
+              <input id="notificationsToggle" type="checkbox" />
+              Obavijesti za nezavršene zadatke i rokove
+            </label>
+            <p id="notificationsStatus" class="settings-note" style="margin-top:12px;" hidden></p>
           </div>
 
           <div class="panel">

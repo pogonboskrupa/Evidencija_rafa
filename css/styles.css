@@ -78,6 +78,7 @@ button { font: inherit; cursor: pointer; }
 input, select { font: inherit; }
 
 [hidden] { display: none !important; }
+.print-only { display: none; }
 
 ::selection { background: var(--primary-soft); }
 
@@ -1401,13 +1402,14 @@ main {
 }
 .plocice-row:last-child { border-bottom: none; }
 .plocice-row.has-gap { border-left-color: #dd9a2c; background: #fdf8ee; }
+.plocice-row.is-editing { border-left-color: var(--primary); background: var(--primary-soft); }
 
 .col-radnik { flex: 1; min-width: 0; font-weight: 650; }
 .col-raspon { width: 140px; flex: none; font-variant-numeric: tabular-nums; color: var(--text-soft); }
 .col-kolicina { width: 110px; flex: none; color: var(--text-soft); }
 .col-paketi { width: 90px; flex: none; color: var(--text-muted); }
 .col-datum { width: 100px; flex: none; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.col-del { width: 24px; flex: none; text-align: right; }
+.col-actions { width: 56px; flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
 
 .row-warn-icon { margin-left: 4px; cursor: help; }
 
@@ -1445,6 +1447,19 @@ main {
   min-height: 18px;
 }
 
+.plocice-form-title {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 14px;
+  color: var(--primary-dark);
+}
+
+.plocice-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+}
+
 /* ---------- Postavke ---------- */
 .settings-form {
   display: grid;
@@ -1464,6 +1479,19 @@ main {
   font-size: 13px;
   font-weight: 500;
   color: var(--primary-dark);
+}
+
+.settings-note.error {
+  background: var(--danger-light);
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+/* ---------- Postavke: sigurnosna kopija ---------- */
+.backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 /* ---------- Postavke: račun ---------- */
@@ -1577,6 +1605,7 @@ main {
 
   .account-row, .danger-zone { flex-direction: column; align-items: stretch; }
   .account-actions .btn { flex: 1; }
+  .backup-actions .btn { flex: 1; }
   .panel { padding: 16px; border-radius: var(--radius-lg); }
   .year-grid { grid-template-columns: 1fr; }
   .type-options { grid-template-columns: 1fr; }
@@ -1613,7 +1642,7 @@ main {
   .plocice-list-header { display: none; }
   .plocice-row { flex-wrap: wrap; row-gap: 4px; padding: 10px 14px; }
   .col-radnik { flex: 1 1 auto; order: 1; }
-  .col-del { order: 2; }
+  .col-actions { order: 2; }
   .col-raspon, .col-kolicina, .col-paketi, .col-datum {
     order: 3;
     width: auto;
@@ -1633,4 +1662,18 @@ main {
   .stat-card { background: #fff; }
   main { padding: 0; max-width: 100%; }
   @page { margin: 12mm; }
+
+  /* Raspored pločica: ekranski prikaz (lista/detalj kartice, forme, dugmad)
+     se izostavlja, a umjesto njega ispisuje se poseban prikaz sa svim
+     odjelima i punim tabelama odjednom. */
+  #plociceListView, #plociceDetailView { display: none !important; }
+  .print-only { display: block; }
+  .print-odjel-section { break-inside: avoid; margin-bottom: 18px; }
+  .print-plocice-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
+  .print-plocice-table th, .print-plocice-table td {
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+    text-align: left;
+  }
+  .print-plocice-table th { background: #f1f7ed; }
 }
