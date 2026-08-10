@@ -781,6 +781,28 @@ function renderOverviewView() {
   }
 }
 
+// Zajednička logika za bojenje ćelije dana u mini-mjesecu (koristi je i
+// "Godišnji pregled" i "Kalendar"): pozadina prema vrsti zabilježenog dana
+// (šta je rađeno), plus tačka u uglu koja prati status zadataka (zeleno kad
+// su svi završeni, žuto dok nešto stoji nezavršeno) — oba podatka odjednom.
+function styleMiniDayCell(el, rec) {
+  const titleParts = [];
+  if (rec && rec.type && DAY_TYPES[rec.type]) {
+    el.classList.add('filled');
+    el.style.background = DAY_TYPES[rec.type].color;
+    const detail = extraText(rec);
+    titleParts.push(DAY_TYPES[rec.type].label + (detail ? ` — ${detail}` : ''));
+  }
+
+  const tc = taskCounts(rec);
+  if (tc.total) {
+    el.classList.add('has-tasks', tc.done === tc.total ? 'tasks-done' : 'tasks-pending');
+    titleParts.push(`Zadaci ${tc.done}/${tc.total}`);
+  }
+
+  if (titleParts.length) el.title = titleParts.join(' · ');
+}
+
 function renderMiniMonth(year, month) {
   const wrap = document.createElement('div');
   wrap.className = 'mini-month';
@@ -815,21 +837,7 @@ function renderMiniMonth(year, month) {
     const el = document.createElement('div');
     el.className = 'mini-day' + (isWeekend ? ' weekend' : '');
     el.textContent = day;
-
-    const titleParts = [];
-    if (rec && rec.type && DAY_TYPES[rec.type]) {
-      el.classList.add('filled');
-      el.style.background = DAY_TYPES[rec.type].color;
-      titleParts.push(DAY_TYPES[rec.type].label);
-    }
-
-    const tc = taskCounts(rec);
-    if (tc.total) {
-      el.classList.add('has-tasks');
-      titleParts.push(`Zadaci ${tc.done}/${tc.total}`);
-    }
-
-    if (titleParts.length) el.title = titleParts.join(' · ');
+    styleMiniDayCell(el, rec);
     grid.appendChild(el);
   }
 
@@ -888,8 +896,9 @@ function renderCalendarYear() {
   }
 }
 
-// Za razliku od Godišnjeg pregleda (koji boji dan po vrsti radnog dana), ovdje
-// boja označava stanje zadataka: zeleno = svi završeni, žuto = ima nezavršenih.
+// Isto bojenje kao u Godišnjem pregledu (styleMiniDayCell) — pozadina prati
+// zabilježenu vrstu dana, a tačka u uglu status zadataka — tako se u Kalendaru
+// odjednom vidi i šta je tog dana rađeno i da li su zadaci završeni.
 function renderCalendarMiniMonth(year, month) {
   const wrap = document.createElement('div');
   wrap.className = 'mini-month';
@@ -921,17 +930,11 @@ function renderCalendarMiniMonth(year, month) {
     const jsDay = new Date(year, month, day).getDay();
     const isWeekend = jsDay === 0 || jsDay === 6;
     const rec = state.user.records[key];
-    const tc = taskCounts(rec);
 
     const el = document.createElement('div');
     el.className = 'mini-day' + (isWeekend ? ' weekend' : '');
     el.textContent = day;
-
-    if (tc.total) {
-      el.classList.add('filled');
-      el.style.background = tc.done === tc.total ? '#2f7d4f' : '#dd9a2c';
-      el.title = `Zadaci: ${tc.done}/${tc.total}`;
-    }
+    styleMiniDayCell(el, rec);
 
     el.addEventListener('click', () => openTaskDayModal(key));
     grid.appendChild(el);
@@ -970,6 +973,25 @@ function renderCalendarMonthList() {
     weekdayTag.className = 'weekday-tag';
     weekdayTag.textContent = DANI_PUNI[mondayIndex(jsDay)];
     heading.appendChild(weekdayTag);
+
+    // Vrsta zabilježenog dana (šta je rađeno) prikazana odmah uz datum, uporedo sa zadacima ispod.
+    if (rec.type && DAY_TYPES[rec.type]) {
+      const type = DAY_TYPES[rec.type];
+      const badge = document.createElement('span');
+      badge.className = 'day-badge';
+      badge.style.background = type.color;
+      badge.textContent = type.label;
+      heading.appendChild(badge);
+
+      const detail = extraText(rec);
+      if (detail) {
+        const detailEl = document.createElement('span');
+        detailEl.className = 'work-info-detail';
+        detailEl.textContent = detail;
+        heading.appendChild(detailEl);
+      }
+    }
+
     group.appendChild(heading);
 
     const rows = document.createElement('div');
@@ -1027,11 +1049,41 @@ function renderTaskDayList(dateKey) {
   });
 }
 
+// Prikazuje šta je tog dana zabilježeno u "Unos dana" (vrsta dana + učinak),
+// odmah iznad liste zadataka — tako se u Kalendaru vidi oboje na jednom mjestu.
+function renderTaskDayWorkInfo(dateKey) {
+  const rec = state.user.records[dateKey];
+  const box = $('#taskDayWorkInfo');
+  box.innerHTML = '';
+
+  if (!(rec && rec.type && DAY_TYPES[rec.type])) {
+    box.hidden = true;
+    return;
+  }
+
+  box.hidden = false;
+  const type = DAY_TYPES[rec.type];
+  const badge = document.createElement('span');
+  badge.className = 'day-badge';
+  badge.style.background = type.color;
+  badge.textContent = type.label;
+  box.appendChild(badge);
+
+  const detail = extraText(rec);
+  if (detail) {
+    const detailEl = document.createElement('span');
+    detailEl.className = 'work-info-detail';
+    detailEl.textContent = detail;
+    box.appendChild(detailEl);
+  }
+}
+
 function openTaskDayModal(dateKey) {
   state.taskModalDateKey = dateKey;
   const [y, m, d] = dateKey.split('-').map(Number);
   $('#taskDayModalLabel').textContent = `${d}. ${MJESECI[m - 1]} ${y}.`;
   $('#taskDayInput').value = '';
+  renderTaskDayWorkInfo(dateKey);
   renderTaskDayList(dateKey);
   $('#taskDayModalOverlay').hidden = false;
 }

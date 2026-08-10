@@ -782,6 +782,8 @@ main {
 
 .day-row.weekend .col-extra { color: var(--weekend-text); }
 
+.day-row .col-extra:empty { display: none; }
+
 .day-row .col-chevron {
   color: #b5c4ac;
   font-size: 15px;
@@ -876,6 +878,22 @@ main {
 
 .modal h3 { font-size: 19px; font-weight: 700; padding-right: 40px; }
 .modal .modal-sub { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+
+.task-day-work-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+}
+
+.task-day-work-info .work-info-detail {
+  font-size: 13px;
+  color: var(--text-muted);
+}
 
 .modal-close {
   position: absolute;
@@ -1189,19 +1207,22 @@ main {
   font-variant-numeric: tabular-nums;
 }
 
-/* dan sa zadacima nosi sitnu tačku u uglu */
+/* dan sa zadacima nosi sitnu tačku u uglu — boja prati status: zeleno kad su
+   svi zadaci završeni, žuto dok nešto stoji nezavršeno. Bijeli obrub drži
+   tačku vidljivom i preko obojene pozadine vrste dana. */
 .mini-day.has-tasks::after {
   content: '';
   position: absolute;
   top: 1.5px;
   right: 1.5px;
-  width: 3.5px;
-  height: 3.5px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: var(--primary-dark);
+  background: #dd9a2c;
+  box-shadow: 0 0 0 1.5px #fff;
 }
 
-.mini-day.has-tasks.filled::after { background: rgba(255, 255, 255, 0.9); }
+.mini-day.has-tasks.tasks-done::after { background: #2f7d4f; }
 
 .mini-day.empty { visibility: hidden; }
 .mini-day.filled { color: #fff; font-weight: 700; }
@@ -1255,6 +1276,10 @@ main {
 }
 
 .month-task-date {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   font-weight: 700;
   font-size: 13.5px;
   color: var(--primary-dark);
@@ -1265,9 +1290,11 @@ main {
   font-weight: 500;
   color: var(--text-muted);
   text-transform: capitalize;
-  margin-left: 7px;
   font-size: 12px;
 }
+
+.month-task-date .day-badge { font-size: 11px; padding: 3px 8px; }
+.month-task-date .work-info-detail { font-weight: 500; font-size: 12px; color: var(--text-muted); }
 
 .month-task-rows {
   display: flex;
@@ -1419,11 +1446,28 @@ main {
   .month-nav .month-label { min-width: 0; flex: 1; font-size: 15px; }
   .panel-header, .year-header { gap: 10px; }
 
-  /* na uskim ekranima ostaje samo oznaka zadataka, detalji se izostavljaju */
-  .col-extra { flex: none; }
-  .day-row .extra-detail { display: none; }
-  .col-date { width: 76px; }
-  .col-type { flex: 1; width: auto; min-width: 0; }
+  /* na uskim ekranima detalji (učinak) se prebacuju u drugi red ispod
+     datuma/vrste dana, umjesto da se izostavljaju ili guraju red van širine. */
+  .day-row {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 46px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    row-gap: 4px;
+  }
+  .col-date { width: 76px; order: 1; }
+  .col-type { flex: 1; width: auto; min-width: 0; order: 2; }
+  .col-chevron { order: 3; }
+  .col-extra {
+    order: 4;
+    flex: 0 0 100%;
+    width: 100%;
+    margin-left: 90px;
+    padding-right: 14px;
+    font-size: 12.5px;
+  }
+  .day-row .extra-detail { white-space: normal; }
   .day-list-scroll { max-height: 62vh; }
 }
 

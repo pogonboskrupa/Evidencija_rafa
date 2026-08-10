@@ -15,10 +15,11 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
   - Kod **Doznake stabala** upisuje se *broj stabala* i *površina (ha)*.
   - Kod **Vlaka** upisuje se *kilometraža projektovanih vlaka (km)*.
   - Kod **Kancelarije** upisuje se *napomena* — šta je tog dana rađeno.
+  - Uneseni učinak (broj stabala i površina, kilometraža vlaka, napomena) ispisuje se odmah uz svaki red u listi dana, i na desktopu i na uskim (mobilnim) ekranima — na mobilnom se prikazuje u drugom redu ispod vrste dana, umjesto da se izostavlja.
 - **Zadaci po danu** — na svaki dan u kalendaru može se dodati lista zadataka koji se pojedinačno označavaju kao završeni ili brišu. Dan može imati samo zadatke, bez odabrane vrste dana. U listi dana prikazuje se oznaka `Zadaci 1/3`, a u godišnjem pregledu dan sa zadacima nosi sitnu tačku.
-- **Kartica "Kalendar"** — poseban prostor za zadatke, termine i rokove, odvojen od evidencije radnih dana:
-  - **Godišnji kalendar** — 12 mjeseci na jednom listu; dan s nezavršenim zadatkom je žut, sa svim završenim zadacima zelen. Klik na dan otvara jednostavan modal samo za taj dan (dodavanje, čekiranje, brisanje), bez biranja vrste dana.
-  - **Pregled po mjesecu** — hronološka lista svih dana u mjesecu koji imaju zadatke, s brzim unosom (datum + tekst) na vrhu za dodavanje bez otvaranja godišnjeg prikaza.
+- **Kartica "Kalendar"** — poseban prostor za zadatke, termine i rokove, odvojen od evidencije radnih dana, ali automatski povezan s njom:
+  - **Godišnji kalendar** — 12 mjeseci na jednom listu; pozadina dana prati zabilježenu vrstu rada (ista boja kao u "Unos dana"), a sitna tačka u uglu prati status zadataka (zeleno kad su svi završeni, žuto dok nešto stoji nezavršeno) — oboje se vidi odjednom, bez otvaranja dana. Klik na dan otvara modal koji na vrhu prikazuje šta je tog dana zabilježeno kao rad (vrsta dana i učinak), a ispod listu zadataka za taj dan (dodavanje, čekiranje, brisanje).
+  - **Pregled po mjesecu** — hronološka lista svih dana u mjesecu koji imaju zadatke, uz bedž vrste dana i učinka pored datuma kad je taj dan evidentiran u "Unos dana", s brzim unosom (datum + tekst) na vrhu za dodavanje bez otvaranja godišnjeg prikaza.
   - Zadaci su isti podaci kao u "Unos dana" (dijele isto polje po danu) — dodavanje u jednoj kartici odmah je vidljivo u drugoj.
 - **Postavke godišnjeg odmora** — broj dana godišnjeg odmora po godini i datum od kojeg se koristi.
 - **Godišnji pregled** — cijela godina (12 mjeseci) prikazana na jednom listu, sa statistikom (ukupno radnih dana, ukupan broj stabala, površina, kilometraža vlaka, iskorišteni/preostali godišnji odmor...) i mogućnošću ispisa/PDF-a.
