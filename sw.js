@@ -5,7 +5,7 @@
 // Aplikacija je mala (nekoliko desetina kB), tako da je cijena ovog pristupa
 // zanemariva, a ponašanje predvidivo: online uvijek svježe, offline iz keša.
 
-const VERSION = 'v5';
+const VERSION = 'v6';
 const CACHE = `evidencija-rafa-${VERSION}`;
 const NETWORK_TIMEOUT_MS = 4000;
 
@@ -22,9 +22,11 @@ const SHELL = [
   './js/pwa.js',
   './js/keypad.js',
   './manifest.webmanifest',
+  './icons/favicon-64.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
+  './icons/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', (event) => {
