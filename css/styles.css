@@ -1307,6 +1307,119 @@ main {
   padding: 30px 0;
 }
 
+/* ---------- Raspored pločica ---------- */
+.inline-add-form {
+  display: flex;
+  gap: 10px;
+  max-width: 520px;
+  margin-top: 14px;
+}
+.inline-add-form input { flex: 1; }
+
+.odjel-panel { margin-top: 18px; }
+
+.odjel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.odjel-header h3 { margin: 0; }
+.odjel-header-actions { display: flex; align-items: center; gap: 10px; }
+.odjel-summary { font-size: 12.5px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+
+.plocice-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #fdf3e2;
+  border: 1px solid #f0d8a8;
+  color: #8a5f14;
+  border-radius: var(--radius-sm);
+  padding: 10px 13px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 12px 0;
+}
+
+.plocice-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.plocice-list-header,
+.plocice-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+}
+
+.plocice-list-header {
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.plocice-row {
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  background: var(--surface);
+  font-size: 13.5px;
+}
+.plocice-row:last-child { border-bottom: none; }
+.plocice-row.has-gap { border-left-color: #dd9a2c; background: #fdf8ee; }
+
+.col-radnik { flex: 1; min-width: 0; font-weight: 650; }
+.col-raspon { width: 140px; flex: none; font-variant-numeric: tabular-nums; color: var(--text-soft); }
+.col-kolicina { width: 110px; flex: none; color: var(--text-soft); }
+.col-paketi { width: 90px; flex: none; color: var(--text-muted); }
+.col-del { width: 24px; flex: none; text-align: right; }
+
+.row-warn-icon { margin-left: 4px; cursor: help; }
+
+.plocice-add-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+  align-items: end;
+}
+.plocice-add-form .field { margin-bottom: 0; }
+
+/* Puna širina, vlastiti red — inače bi rast panela tipkovnice (kad dobije
+   sadržaj) povećao visinu reda u kojem su i unosna polja, a "align-items:
+   end" bi ih pomjerio niz stranicu usred klika (polje bi "pobjeglo" ispod
+   pokazivača između mousedown i click događaja). */
+.plocice-keypad-host { grid-column: 1 / -1; }
+
+.plocice-mode-toggle { display: flex; gap: 16px; align-items: center; height: 44px; }
+.plocice-mode-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-soft);
+  cursor: pointer;
+}
+.plocice-mode-toggle input { accent-color: var(--primary); cursor: pointer; }
+
+.plocice-preview {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  min-height: 18px;
+}
+
 /* ---------- Postavke ---------- */
 .settings-form {
   display: grid;
@@ -1469,6 +1582,19 @@ main {
   }
   .day-row .extra-detail { white-space: normal; }
   .day-list-scroll { max-height: 62vh; }
+
+  /* Raspored pločica: zaglavlje liste se izostavlja (kolone su samoopisne
+     zbog jedinica uz vrijednost), a red se prelama u dva reda. */
+  .plocice-list-header { display: none; }
+  .plocice-row { flex-wrap: wrap; row-gap: 4px; padding: 10px 14px; }
+  .col-radnik { flex: 1 1 auto; order: 1; }
+  .col-del { order: 2; }
+  .col-raspon, .col-kolicina, .col-paketi {
+    order: 3;
+    width: auto;
+    font-size: 12px;
+  }
+  .odjel-header-actions { width: 100%; justify-content: space-between; }
 }
 
 /* ---------- Ispis: cijela godina na jednom listu ---------- */

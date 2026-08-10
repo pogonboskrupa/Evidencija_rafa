@@ -114,6 +114,7 @@
         <nav class="nav-tabs">
           <button data-view="entry" class="active" type="button">Unos dana</button>
           <button data-view="calendar" type="button">Kalendar</button>
+          <button data-view="plocice" type="button">Raspored pločica</button>
           <button data-view="overview" type="button">Godišnji pregled</button>
           <button data-view="settings" type="button">Postavke</button>
         </nav>
@@ -184,6 +185,20 @@
               <div id="monthTaskList" class="month-task-list"></div>
             </div>
           </div>
+        </section>
+
+        <!-- ---- RASPORED PLOČICA ---- -->
+        <section id="view-plocice" class="view" hidden>
+          <div class="panel">
+            <h3>Raspored pločica</h3>
+            <p class="form-hint">Raspored po odjelima — dodajte odjel, pa unutar njega projektante i pločice ili pakete koje su zadužili (1 paket = 30 pločica). Raspon svakog radnika treba se nastavljati bez praznina; ako ih ima, prikazuje se upozorenje.</p>
+            <form id="addOdjelForm" class="inline-add-form">
+              <input id="newOdjelName" type="text" maxlength="80" placeholder="Naziv odjela (npr. Odjel 12)" required />
+              <button type="submit" class="btn btn-primary">Dodaj odjel</button>
+            </form>
+          </div>
+
+          <div id="odjeliList"></div>
         </section>
 
         <!-- ---- GODIŠNJI PREGLED ---- -->

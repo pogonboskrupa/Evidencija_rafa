@@ -24,6 +24,9 @@ window.Storage = (function () {
   const RADNI_SUBTIPOVI = ['doznaka', 'vlake', 'teren', 'kisa', 'kancelarija'];
   const ODSUSTVO_TIPOVI = ['godisnji', 'bolovanje', 'praznik', 'placeno'];
 
+  // "Raspored pločica": 1 paket markirnih pločica = 30 komada.
+  const PLOCICE_PAKET_SIZE = 30;
+
   function loadDB() {
     const raw = localStorage.getItem(DB_KEY);
     return raw ? JSON.parse(raw) : { users: {} };
@@ -182,6 +185,60 @@ window.Storage = (function () {
     saveUser(user);
   }
 
+  /* ==================== RASPORED PLOČICA ====================
+     Raspored po odjelima: svaki odjel ima listu radnika (projektanata) kojima
+     je dodijeljen raspon markirnih pločica (od-do), unesen direktno kao broj
+     pločica ili kao broj paketa (1 paket = PLOCICE_PAKET_SIZE pločica). Nalozi
+     napravljeni prije uvođenja ove kartice nemaju `plocice` polje — ensurePlocice
+     ga lijeno dodaje pri prvom pristupu. */
+
+  function ensurePlocice(user) {
+    if (!user.plocice) user.plocice = { odjeli: [] };
+    return user.plocice;
+  }
+
+  function getOdjeli(user) {
+    return ensurePlocice(user).odjeli;
+  }
+
+  function addOdjel(user, name) {
+    const odjel = { id: randomHex(6), name: name.trim(), radnici: [] };
+    ensurePlocice(user).odjeli.push(odjel);
+    saveUser(user);
+    return odjel;
+  }
+
+  function deleteOdjel(user, odjelId) {
+    const plocice = ensurePlocice(user);
+    plocice.odjeli = plocice.odjeli.filter((o) => o.id !== odjelId);
+    saveUser(user);
+  }
+
+  // { ime, pocetna, kolicina, brojPaketa } — brojPaketa je null kad je unos
+  // bio direktno u pločicama (ne preko paketa).
+  function addRadnikToOdjel(user, odjelId, { ime, pocetna, kolicina, brojPaketa }) {
+    const odjel = getOdjeli(user).find((o) => o.id === odjelId);
+    if (!odjel) return null;
+    const radnik = {
+      id: randomHex(6),
+      ime: ime.trim(),
+      pocetna,
+      kolicina,
+      krajnja: pocetna + kolicina - 1,
+      brojPaketa: brojPaketa || null,
+    };
+    odjel.radnici.push(radnik);
+    saveUser(user);
+    return radnik;
+  }
+
+  function deleteRadnikFromOdjel(user, odjelId, radnikId) {
+    const odjel = getOdjeli(user).find((o) => o.id === odjelId);
+    if (!odjel) return;
+    odjel.radnici = odjel.radnici.filter((r) => r.id !== radnikId);
+    saveUser(user);
+  }
+
   return {
     DAY_TYPES,
     RADNI_SUBTIPOVI,
@@ -199,5 +256,11 @@ window.Storage = (function () {
     deleteUser,
     getVacationSettings,
     saveVacationSettings,
+    PLOCICE_PAKET_SIZE,
+    getOdjeli,
+    addOdjel,
+    deleteOdjel,
+    addRadnikToOdjel,
+    deleteRadnikFromOdjel,
   };
 })();

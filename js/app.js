@@ -20,6 +20,12 @@ const {
   deleteUser,
   getVacationSettings,
   saveVacationSettings,
+  PLOCICE_PAKET_SIZE,
+  getOdjeli,
+  addOdjel,
+  deleteOdjel,
+  addRadnikToOdjel,
+  deleteRadnikFromOdjel,
 } = window.Storage;
 const { computeYearStats } = window.Stats;
 const { renderForestBackdrop } = window.Forest;
@@ -274,7 +280,7 @@ function logout() {
 /* ==================== NAV ==================== */
 
 function switchView(view) {
-  ['entry', 'calendar', 'overview', 'settings'].forEach((v) => {
+  ['entry', 'calendar', 'plocice', 'overview', 'settings'].forEach((v) => {
     $(`#view-${v}`).hidden = v !== view;
   });
   $$('.nav-tabs button').forEach((btn) => {
@@ -284,6 +290,7 @@ function switchView(view) {
   // moraju se odmah odraziti u "Unos dana" i obrnuto.
   if (view === 'entry') renderEntryView();
   if (view === 'calendar') renderCalendarView();
+  if (view === 'plocice') renderPlociceView();
   if (view === 'overview') renderOverviewView();
   if (view === 'settings') renderSettingsView();
 }
@@ -1177,6 +1184,278 @@ function initCalendarNav() {
   });
 }
 
+/* ==================== RASPORED PLOČICA ==================== */
+// Raspored po odjelima: svaki odjel sadrži listu radnika (projektanata) i
+// raspon markirnih pločica koje su zadužili (unos direktno u pločicama ili u
+// paketima, 1 paket = PLOCICE_PAKET_SIZE pločica). Redoslijed treba biti bez
+// praznina — svaki sljedeći raspon nastavlja se od kraja prethodnog; ako
+// postoji praznina ili preklapanje, prikazuje se upozorenje.
+
+function computeSuggestedStart(odjel) {
+  if (!odjel.radnici.length) return 1;
+  const maxKrajnja = odjel.radnici.reduce((max, r) => Math.max(max, r.krajnja), 0);
+  return maxKrajnja + 1;
+}
+
+function renderPlociceView() {
+  const odjeli = getOdjeli(state.user);
+  const container = $('#odjeliList');
+  container.innerHTML = '';
+
+  if (!odjeli.length) {
+    renderTaskEmptyState(container, 'Nema dodanih odjela. Dodajte prvi odjel iznad.');
+    return;
+  }
+
+  odjeli.forEach((odjel) => container.appendChild(renderOdjelPanel(odjel)));
+}
+
+function renderOdjelPanel(odjel) {
+  const panel = document.createElement('div');
+  panel.className = 'panel odjel-panel';
+
+  const header = document.createElement('div');
+  header.className = 'odjel-header';
+
+  const h3 = document.createElement('h3');
+  h3.textContent = odjel.name;
+  header.appendChild(h3);
+
+  const actions = document.createElement('div');
+  actions.className = 'odjel-header-actions';
+
+  const totalPlocica = odjel.radnici.reduce((sum, r) => sum + r.kolicina, 0);
+  const summary = document.createElement('span');
+  summary.className = 'odjel-summary';
+  summary.textContent = `${odjel.radnici.length} ${odjel.radnici.length === 1 ? 'radnik' : 'radnika'} · ${totalPlocica} pločica`;
+  actions.appendChild(summary);
+
+  const delOdjelBtn = document.createElement('button');
+  delOdjelBtn.type = 'button';
+  delOdjelBtn.className = 'task-del';
+  delOdjelBtn.title = 'Obriši odjel';
+  delOdjelBtn.setAttribute('aria-label', 'Obriši odjel');
+  delOdjelBtn.textContent = '×';
+  delOdjelBtn.addEventListener('click', () => {
+    if (!confirm(`Obrisati odjel "${odjel.name}" i sve unose u njemu?`)) return;
+    deleteOdjel(state.user, odjel.id);
+    renderPlociceView();
+  });
+  actions.appendChild(delOdjelBtn);
+
+  header.appendChild(actions);
+  panel.appendChild(header);
+
+  // Radnici prikazani po redoslijedu pločica (ne po redoslijedu unosa) — tako
+  // se praznine/preklapanja odmah vide u prirodnom nizu.
+  const sorted = [...odjel.radnici].sort((a, b) => a.pocetna - b.pocetna);
+  const rowWarnings = new Map();
+  const panelWarnings = [];
+
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1];
+    const cur = sorted[i];
+    let msg = '';
+    if (cur.pocetna > prev.krajnja + 1) {
+      msg = `Praznina: pločice ${prev.krajnja + 1}–${cur.pocetna - 1} nisu dodijeljene nijednom radniku (prije "${cur.ime}").`;
+    } else if (cur.pocetna <= prev.krajnja) {
+      msg = `Preklapanje: "${prev.ime}" (${prev.pocetna}–${prev.krajnja}) i "${cur.ime}" (${cur.pocetna}–${cur.krajnja}) dijele iste pločice.`;
+    }
+    if (msg) {
+      rowWarnings.set(cur.id, msg);
+      panelWarnings.push(msg);
+    }
+  }
+
+  if (panelWarnings.length) {
+    const warnBox = document.createElement('div');
+    warnBox.className = 'plocice-warning';
+    const icon = document.createElement('span');
+    icon.textContent = '⚠️';
+    warnBox.appendChild(icon);
+    const textWrap = document.createElement('div');
+    panelWarnings.forEach((msg) => {
+      const line = document.createElement('div');
+      line.textContent = msg;
+      textWrap.appendChild(line);
+    });
+    warnBox.appendChild(textWrap);
+    panel.appendChild(warnBox);
+  }
+
+  if (sorted.length) {
+    const list = document.createElement('div');
+    list.className = 'plocice-list';
+
+    const listHeader = document.createElement('div');
+    listHeader.className = 'plocice-list-header';
+    listHeader.innerHTML = `
+      <span class="col-radnik">Radnik</span>
+      <span class="col-raspon">Raspon pločica</span>
+      <span class="col-kolicina">Broj pločica</span>
+      <span class="col-paketi">Paketi</span>
+      <span class="col-del"></span>`;
+    list.appendChild(listHeader);
+
+    sorted.forEach((radnik) => {
+      const warning = rowWarnings.get(radnik.id);
+      const row = document.createElement('div');
+      row.className = 'plocice-row' + (warning ? ' has-gap' : '');
+
+      const radnikCol = document.createElement('span');
+      radnikCol.className = 'col-radnik';
+      radnikCol.textContent = radnik.ime;
+      if (warning) {
+        const warnIcon = document.createElement('span');
+        warnIcon.className = 'row-warn-icon';
+        warnIcon.textContent = '⚠️';
+        warnIcon.title = warning;
+        radnikCol.appendChild(warnIcon);
+      }
+      row.appendChild(radnikCol);
+
+      const rasponCol = document.createElement('span');
+      rasponCol.className = 'col-raspon';
+      rasponCol.textContent = `${radnik.pocetna}–${radnik.krajnja}`;
+      row.appendChild(rasponCol);
+
+      const kolicinaCol = document.createElement('span');
+      kolicinaCol.className = 'col-kolicina';
+      kolicinaCol.textContent = `${radnik.kolicina} kom.`;
+      row.appendChild(kolicinaCol);
+
+      const paketiCol = document.createElement('span');
+      paketiCol.className = 'col-paketi';
+      paketiCol.textContent = radnik.brojPaketa ? `${radnik.brojPaketa} pak.` : '—';
+      row.appendChild(paketiCol);
+
+      const delCol = document.createElement('span');
+      delCol.className = 'col-del';
+      const delRadnikBtn = document.createElement('button');
+      delRadnikBtn.type = 'button';
+      delRadnikBtn.className = 'task-del';
+      delRadnikBtn.title = 'Obriši radnika';
+      delRadnikBtn.setAttribute('aria-label', 'Obriši radnika');
+      delRadnikBtn.textContent = '×';
+      delRadnikBtn.addEventListener('click', () => {
+        deleteRadnikFromOdjel(state.user, odjel.id, radnik.id);
+        renderPlociceView();
+      });
+      delCol.appendChild(delRadnikBtn);
+      row.appendChild(delCol);
+
+      list.appendChild(row);
+    });
+
+    panel.appendChild(list);
+  }
+
+  panel.appendChild(renderAddRadnikForm(odjel));
+
+  return panel;
+}
+
+function renderAddRadnikForm(odjel) {
+  const form = document.createElement('form');
+  form.className = 'plocice-add-form';
+
+  const modeName = `plocice-mode-${odjel.id}`;
+  form.innerHTML = `
+    <div class="field">
+      <label>Ime radnika</label>
+      <input type="text" class="radnik-ime-input" maxlength="80" placeholder="Ime i prezime" required />
+    </div>
+    <div class="field">
+      <label>Način unosa</label>
+      <div class="plocice-mode-toggle">
+        <label><input type="radio" name="${modeName}" value="paketi" checked /> Broj paketa</label>
+        <label><input type="radio" name="${modeName}" value="plocice" /> Broj pločica</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>Početna pločica</label>
+      <input type="text" inputmode="numeric" class="radnik-pocetna-input" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label class="radnik-kolicina-label">Broj paketa</label>
+      <input type="text" inputmode="numeric" class="radnik-kolicina-input" autocomplete="off" placeholder="npr. 10" />
+    </div>
+    <div class="num-keypad-host plocice-keypad-host"></div>
+    <div class="plocice-preview"></div>
+    <div><button type="submit" class="btn btn-secondary">Dodaj radnika</button></div>
+  `;
+
+  const imeInput = form.querySelector('.radnik-ime-input');
+  const pocetnaInput = form.querySelector('.radnik-pocetna-input');
+  const kolicinaInput = form.querySelector('.radnik-kolicina-input');
+  const kolicinaLabel = form.querySelector('.radnik-kolicina-label');
+  const preview = form.querySelector('.plocice-preview');
+  const keypadHost = form.querySelector('.plocice-keypad-host');
+  const modeRadios = form.querySelectorAll(`input[name="${modeName}"]`);
+
+  pocetnaInput.value = String(computeSuggestedStart(odjel));
+
+  attachNumberField(pocetnaInput, { hostEl: keypadHost, label: 'Početna pločica' });
+  attachNumberField(kolicinaInput, { hostEl: keypadHost, label: 'Broj paketa' });
+
+  function currentMode() {
+    return [...modeRadios].find((r) => r.checked)?.value || 'paketi';
+  }
+
+  function updatePreview() {
+    const mode = currentMode();
+    kolicinaLabel.textContent = mode === 'paketi' ? 'Broj paketa' : 'Broj pločica';
+    kolicinaInput.placeholder = mode === 'paketi' ? 'npr. 10' : 'npr. 300';
+
+    const pocetna = Number(pocetnaInput.value);
+    const rawKolicina = Number(kolicinaInput.value);
+    if (!pocetna || !rawKolicina) {
+      preview.textContent = '';
+      return;
+    }
+    const kolicina = mode === 'paketi' ? rawKolicina * PLOCICE_PAKET_SIZE : rawKolicina;
+    const krajnja = pocetna + kolicina - 1;
+    const paketiText = mode === 'paketi' ? ` (${rawKolicina} paketa)` : '';
+    preview.textContent = `Raspon: ${pocetna}–${krajnja} · ${kolicina} pločica${paketiText}`;
+  }
+
+  modeRadios.forEach((r) => r.addEventListener('change', updatePreview));
+  pocetnaInput.addEventListener('input', updatePreview);
+  kolicinaInput.addEventListener('input', updatePreview);
+  updatePreview();
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ime = imeInput.value.trim();
+    const pocetna = Number(pocetnaInput.value);
+    const rawKolicina = Number(kolicinaInput.value);
+    if (!ime || !pocetna || !rawKolicina || rawKolicina <= 0) return;
+    const mode = currentMode();
+    const kolicina = mode === 'paketi' ? rawKolicina * PLOCICE_PAKET_SIZE : rawKolicina;
+    addRadnikToOdjel(state.user, odjel.id, {
+      ime,
+      pocetna,
+      kolicina,
+      brojPaketa: mode === 'paketi' ? rawKolicina : null,
+    });
+    renderPlociceView();
+  });
+
+  return form;
+}
+
+function initPlocice() {
+  $('#addOdjelForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = $('#newOdjelName');
+    const name = input.value.trim();
+    if (!name) return;
+    addOdjel(state.user, name);
+    input.value = '';
+    renderPlociceView();
+  });
+}
+
 /* ==================== POSTAVKE ==================== */
 
 function populateSettingsYears() {
@@ -1241,6 +1520,7 @@ function init() {
   initModal();
   initOverviewNav();
   initCalendarNav();
+  initPlocice();
   initSettings();
 
   const session = getSession();

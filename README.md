@@ -21,6 +21,11 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
   - **Godišnji kalendar** — 12 mjeseci na jednom listu; pozadina dana prati zabilježenu vrstu rada (ista boja kao u "Unos dana"), a sitna tačka u uglu prati status zadataka (zeleno kad su svi završeni, žuto dok nešto stoji nezavršeno) — oboje se vidi odjednom, bez otvaranja dana. Klik na dan otvara modal koji na vrhu prikazuje šta je tog dana zabilježeno kao rad (vrsta dana i učinak), a ispod listu zadataka za taj dan (dodavanje, čekiranje, brisanje).
   - **Pregled po mjesecu** — hronološka lista svih dana u mjesecu koji imaju zadatke, uz bedž vrste dana i učinka pored datuma kad je taj dan evidentiran u "Unos dana", s brzim unosom (datum + tekst) na vrhu za dodavanje bez otvaranja godišnjeg prikaza.
   - Zadaci su isti podaci kao u "Unos dana" (dijele isto polje po danu) — dodavanje u jednoj kartici odmah je vidljivo u drugoj.
+- **Kartica "Raspored pločica"** — raspored markirnih pločica po odjelima:
+  - Korisnik dodaje odjele, a unutar svakog odjela projektante (radnike) kojima je dodijeljen raspon pločica.
+  - Za svakog radnika unosi se ime, te ili **broj pločica** direktno ili **broj paketa** (1 paket = 30 pločica, automatski preračunato). Početna pločica se predlaže kao nastavak posljednjeg radnika u odjelu (bez praznine), a može se ručno promijeniti.
+  - Radnici se prikazuju poredani po rasponu pločica, s ukupnim brojem i rasponom (od-do) po svakom. Ako se raspon dva radnika ne nastavlja bez praznine, ili se preklapa, prikazuje se upozorenje s tačnim brojevima nedodijeljenih pločica.
+  - Odjeli i radnici se pojedinačno brišu; brisanje odjela traži potvrdu.
 - **Postavke godišnjeg odmora** — broj dana godišnjeg odmora po godini i datum od kojeg se koristi.
 - **Godišnji pregled** — cijela godina (12 mjeseci) prikazana na jednom listu, sa statistikom (ukupno radnih dana, ukupan broj stabala, površina, kilometraža vlaka, iskorišteni/preostali godišnji odmor...) i mogućnošću ispisa/PDF-a.
 - **Sažetak mjeseca** ispod liste dana (radni dani, stabla, površina, kilometraža, odsustva, zadaci).
