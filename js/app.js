@@ -294,7 +294,7 @@ function switchView(view) {
     btn.classList.toggle('active', btn.dataset.view === view);
   });
   // Osvježi svaki put pri ulasku u karticu — npr. zadaci dodani u Kalendaru
-  // moraju se odmah odraziti u "Unos dana" i obrnuto.
+  // moraju se odmah odraziti u "Evidencija rada" i obrnuto.
   if (view === 'entry') renderEntryView();
   if (view === 'calendar') renderCalendarView();
   if (view === 'plocice') renderPlociceView();
@@ -311,7 +311,7 @@ function initNav() {
 
 /* ==================== LEGEND ==================== */
 // Legenda vrsta dana ostaje samo u godišnjem pregledu (mini-mjeseci
-// prikazuju samo boju, bez teksta) — u "Unos dana" je uklonjena jer je
+// prikazuju samo boju, bez teksta) — u "Evidencija rada" je uklonjena jer je
 // redundantna, svaki red već ispisuje naziv vrste dana.
 
 function buildLegendHTML() {
@@ -606,7 +606,7 @@ function renderTaskEmptyState(container, message) {
   container.appendChild(empty);
 }
 
-/* --- Zadaci unutar dana (modal "Unos dana") --- */
+/* --- Zadaci unutar dana (modal "Evidencija rada") --- */
 
 function renderTaskList() {
   const list = $('#taskList');
@@ -872,7 +872,7 @@ function initOverviewNav() {
 }
 
 /* ==================== KALENDAR (zadaci, termini, rokovi) ==================== */
-// Koristi isto polje rec.tasks kao modal "Unos dana", ali kroz setDayTasks
+// Koristi isto polje rec.tasks kao modal "Evidencija rada", ali kroz setDayTasks
 // (ne setRecord) — tako se mijenja samo lista zadataka, a vrsta dana i njena
 // dodatna polja (stabla, površina, km, napomena) ostaju netaknuti.
 
@@ -1063,7 +1063,7 @@ function renderTaskDayList(dateKey) {
   });
 }
 
-// Prikazuje šta je tog dana zabilježeno u "Unos dana" (vrsta dana + učinak),
+// Prikazuje šta je tog dana zabilježeno u "Evidencija rada" (vrsta dana + učinak),
 // odmah iznad liste zadataka — tako se u Kalendaru vidi oboje na jednom mjestu.
 function renderTaskDayWorkInfo(dateKey) {
   const rec = state.user.records[dateKey];
