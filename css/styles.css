@@ -374,6 +374,39 @@ input, select { font: inherit; }
   pointer-events: none;
 }
 
+/* ---------- Numerička polja povezana s tastaturom (svuda u aplikaciji) ---------- */
+.num-field { cursor: pointer; }
+
+.num-keypad-host.open {
+  margin-top: 14px;
+  padding: 14px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  animation: numKeypadIn 0.15s ease-out;
+}
+
+.num-keypad-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.num-keypad-host .keypad { margin: 10px auto 14px; }
+
+.num-keypad-done { width: 100%; }
+
+.settings-num-keypad-host { grid-column: 1 / -1; }
+
+@keyframes numKeypadIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
 /* ---------- Dugmad ---------- */
 .btn {
   border: 1px solid transparent;

@@ -7,6 +7,7 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
 ## Značajke
 
 - **Registracija i prijava s PIN-om** putem prave numeričke tipkovnice (dodirom ili fizičkom tipkovnicom) — bez tekstualnog polja za lozinku. PIN ima fiksno 4 cifre; radnja se pokreće automatski čim je upisana zadnja cifra, bez posebnog dugmeta za potvrdu. Registracija ide u dva koraka (postavi pa potvrdi PIN), s mogućnošću povratka na prvi korak. Uz to, opcija "Zapamti me" da se ne morate prijavljivati svaki put.
+- **Numerička tipkovnica na svim brojčanim poljima** — broj stabala, površina (ha), kilometraža vlaka i broj dana godišnjeg odmora otvaraju isti stil tipkovnice kao PIN prijava (polja su readonly, sistemska tastatura se ne otvara). Dodirom na polje ispod se pojavljuje panel s ciframa (i decimalnom tačkom gdje je primjenjivo); fizička tastatura na desktopu i dalje radi. Tekstualna polja (zadaci, napomena, ime/korisničko ime) i dalje koriste običnu tastaturu, jer im treba slobodan tekst.
 - **Unos radnog dana** — mjesec je prikazan u vidu tabele, dan po dan u redovima (kao dnevnik), unutar skrolabilne liste sa fiksnim zaglavljem; pri otvaranju aplikacije uvijek je prikazan tekući mjesec, a prikaz se automatski pozicionira na današnji dan. Vikend dani (subota, nedjelja) posebno su označeni tamnijom nijansom sive. Klikom na red bira se vrsta dana:
   - Radni dani: **Doznaka stabala**, **Vlake**, **Teren**, **Kiša**, **Kancelarija**
   - Odsustva: **Godišnji odmor**, **Bolovanje**, **Praznik**, **Plaćeno odsustvo**

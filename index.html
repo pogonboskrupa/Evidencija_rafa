@@ -176,7 +176,7 @@
               </div>
               <div class="field">
                 <label for="vacationDays">Broj dana godišnjeg odmora</label>
-                <input id="vacationDays" type="number" min="0" max="60" required />
+                <input id="vacationDays" type="text" inputmode="numeric" autocomplete="off" required />
               </div>
               <div class="field">
                 <label for="vacationFrom">Koristi se od</label>
@@ -185,6 +185,7 @@
               <div style="align-self:end;">
                 <button type="submit" class="btn btn-primary">Spremi postavke</button>
               </div>
+              <div class="num-keypad-host settings-num-keypad-host" id="vacationDaysKeypadHost"></div>
             </form>
             <div id="settingsSaved" class="settings-note" style="margin-top:14px;" hidden>Postavke su spremljene.</div>
           </div>

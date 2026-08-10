@@ -23,7 +23,7 @@ const {
 const { computeYearStats } = window.Stats;
 const { renderForestBackdrop } = window.Forest;
 const { initPWA } = window.PWA;
-const { createPinController } = window.Keypad;
+const { createPinController, attachNumberField } = window.Keypad;
 
 const MJESECI = [
   'januar', 'februar', 'mart', 'april', 'maj', 'juni',
@@ -507,24 +507,29 @@ function renderExtraFields(selectedType, rec) {
       <div class="extra-fields">
         <div class="field">
           <label for="treesInput">Broj stabala</label>
-          <input id="treesInput" type="number" min="0" />
+          <input id="treesInput" type="text" inputmode="numeric" autocomplete="off" />
         </div>
         <div class="field">
           <label for="areaInput">Površina (ha)</label>
-          <input id="areaInput" type="number" min="0" step="0.01" />
+          <input id="areaInput" type="text" inputmode="decimal" autocomplete="off" />
         </div>
-      </div>`;
+      </div>
+      <div class="num-keypad-host" id="numKeypadHost"></div>`;
     $('#treesInput').value = rec?.trees ?? '';
     $('#areaInput').value = rec?.area ?? '';
+    attachNumberField($('#treesInput'), { hostEl: $('#numKeypadHost'), label: 'Broj stabala' });
+    attachNumberField($('#areaInput'), { hostEl: $('#numKeypadHost'), decimal: true, label: 'Površina (ha)' });
   } else if (selectedType === 'vlake') {
     container.innerHTML = `
       <div class="extra-fields">
         <div class="field">
           <label for="kmInput">Kilometraža vlaka (km)</label>
-          <input id="kmInput" type="number" min="0" step="0.01" />
+          <input id="kmInput" type="text" inputmode="decimal" autocomplete="off" />
         </div>
-      </div>`;
+      </div>
+      <div class="num-keypad-host" id="numKeypadHost"></div>`;
     $('#kmInput').value = rec?.km ?? '';
+    attachNumberField($('#kmInput'), { hostEl: $('#numKeypadHost'), decimal: true, label: 'Kilometraža vlaka (km)' });
   } else if (selectedType === 'kancelarija') {
     container.innerHTML = `
       <div class="extra-fields">
@@ -880,11 +885,13 @@ function renderSettingsView() {
 }
 
 function initSettings() {
+  attachNumberField($('#vacationDays'), { hostEl: $('#vacationDaysKeypadHost'), label: 'Broj dana godišnjeg odmora' });
+
   $('#settingsYear').addEventListener('change', loadSettingsForYear);
   $('#settingsForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const year = Number($('#settingsYear').value) || new Date().getFullYear();
-    const days = Math.max(0, Number($('#vacationDays').value) || 0);
+    const days = Math.min(60, Math.max(0, Number($('#vacationDays').value) || 0));
     const validFrom = $('#vacationFrom').value || `${year}-01-01`;
     saveVacationSettings(state.user, year, { days, validFrom });
     $('#settingsSaved').hidden = false;
