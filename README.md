@@ -26,6 +26,7 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
   - Za svakog radnika unosi se ime, te ili **broj pločica** direktno ili **broj paketa** (1 paket = 30 pločica, automatski preračunato). Početna pločica se predlaže kao nastavak posljednjeg radnika u odjelu (bez praznine), a može se ručno promijeniti.
   - Radnici se prikazuju poredani po rasponu pločica, s ukupnim brojem i rasponom (od-do) po svakom. Ako se raspon dva radnika ne nastavlja bez praznine, ili se preklapa, prikazuje se upozorenje s tačnim brojevima nedodijeljenih pločica.
   - Odjeli i radnici se pojedinačno brišu; brisanje odjela traži potvrdu.
+  - Podtab **"Pregled po redoslijedu"** prikazuje sve radnike iz svih odjela u jednoj listi, poredanoj isključivo redoslijedom brojeva pločica (bez obzira na odjel) — sa statistikom (ukupno pločica, radnika, odjela) i upozorenjem ako u cijelom nizu, gledano preko svih odjela, postoji praznina ili preklapanje.
 - **Postavke godišnjeg odmora** — broj dana godišnjeg odmora po godini i datum od kojeg se koristi.
 - **Godišnji pregled** — cijela godina (12 mjeseci) prikazana na jednom listu, sa statistikom (ukupno radnih dana, ukupan broj stabala, površina, kilometraža vlaka, iskorišteni/preostali godišnji odmor...) i mogućnošću ispisa/PDF-a.
 - **Sažetak mjeseca** ispod liste dana (radni dani, stabla, površina, kilometraža, odsustva, zadaci).

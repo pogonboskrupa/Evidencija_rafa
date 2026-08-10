@@ -50,6 +50,7 @@ const state = {
   calendarYear: new Date().getFullYear(),
   calendarMonth: new Date().getMonth(),
   taskModalDateKey: null,
+  plociceView: 'odjeli', // 'odjeli' | 'pregled'
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -1198,6 +1199,19 @@ function computeSuggestedStart(odjel) {
 }
 
 function renderPlociceView() {
+  $('#plociceOdjeliIntro').hidden = state.plociceView !== 'odjeli';
+  $('#plocicePregledIntro').hidden = state.plociceView !== 'pregled';
+  $('#odjeliList').hidden = state.plociceView !== 'odjeli';
+  $('#plocicePregledListPanel').hidden = state.plociceView !== 'pregled';
+  $$('#plociceSubtabs button').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.plociceview === state.plociceView);
+  });
+
+  if (state.plociceView === 'odjeli') renderOdjeliList();
+  else renderPlocicePregledList();
+}
+
+function renderOdjeliList() {
   const odjeli = getOdjeli(state.user);
   const container = $('#odjeliList');
   container.innerHTML = '';
@@ -1208,6 +1222,122 @@ function renderPlociceView() {
   }
 
   odjeli.forEach((odjel) => container.appendChild(renderOdjelPanel(odjel)));
+}
+
+// Svi radnici iz svih odjela na jednom mjestu, poredani redoslijedom pločica
+// (bez obzira na odjel) — za provjeru da li se cijeli niz nastavlja bez
+// praznina, npr. kad se ista fizička serija pločica dijeli na više odjela.
+function renderPlocicePregledList() {
+  const odjeli = getOdjeli(state.user);
+  const all = [];
+  odjeli.forEach((odjel) => {
+    odjel.radnici.forEach((r) => all.push({ ...r, odjelName: odjel.name }));
+  });
+  all.sort((a, b) => a.pocetna - b.pocetna);
+
+  const totalPlocica = all.reduce((sum, r) => sum + r.kolicina, 0);
+  const cards = [
+    { accent: '#2f7d4f', label: 'Ukupno pločica', value: totalPlocica },
+    { accent: '#2f7d4f', label: 'Ukupno radnika', value: all.length },
+    { accent: '#2f7d4f', label: 'Broj odjela', value: odjeli.length },
+  ];
+  $('#plocicePregledStats').innerHTML = cards
+    .map(
+      (c) => `<div class="stat-card" style="--accent-color:${c.accent}"><div class="stat-body"><div class="stat-value">${c.value}</div><div class="stat-label">${c.label}</div></div></div>`
+    )
+    .join('');
+
+  const listPanel = $('#plocicePregledListPanel');
+  listPanel.innerHTML = '';
+
+  if (!all.length) {
+    renderTaskEmptyState(listPanel, 'Nema unesenih pločica ni u jednom odjelu.');
+    return;
+  }
+
+  const issues = [];
+  for (let i = 1; i < all.length; i++) {
+    const prev = all[i - 1];
+    const cur = all[i];
+    if (cur.pocetna > prev.krajnja + 1) {
+      issues.push({ id: cur.id, msg: `Praznina: pločice ${prev.krajnja + 1}–${cur.pocetna - 1} nisu dodijeljene (između "${prev.ime}" u odjelu "${prev.odjelName}" i "${cur.ime}" u odjelu "${cur.odjelName}").` });
+    } else if (cur.pocetna <= prev.krajnja) {
+      issues.push({ id: cur.id, msg: `Preklapanje: "${prev.ime}" (${prev.odjelName}) i "${cur.ime}" (${cur.odjelName}) dijele pločice ${cur.pocetna}–${Math.min(prev.krajnja, cur.krajnja)}.` });
+    }
+  }
+  const rowWarnings = new Map(issues.map((i) => [i.id, i.msg]));
+
+  if (issues.length) {
+    const warnBox = document.createElement('div');
+    warnBox.className = 'plocice-warning';
+    const icon = document.createElement('span');
+    icon.textContent = '⚠️';
+    warnBox.appendChild(icon);
+    const textWrap = document.createElement('div');
+    issues.forEach(({ msg }) => {
+      const line = document.createElement('div');
+      line.textContent = msg;
+      textWrap.appendChild(line);
+    });
+    warnBox.appendChild(textWrap);
+    listPanel.appendChild(warnBox);
+  }
+
+  const list = document.createElement('div');
+  list.className = 'plocice-list';
+
+  const listHeader = document.createElement('div');
+  listHeader.className = 'plocice-list-header';
+  listHeader.innerHTML = `
+    <span class="col-raspon">Raspon pločica</span>
+    <span class="col-radnik">Radnik</span>
+    <span class="col-odjel">Odjel</span>
+    <span class="col-kolicina">Broj pločica</span>
+    <span class="col-paketi">Paketi</span>`;
+  list.appendChild(listHeader);
+
+  all.forEach((radnik) => {
+    const warning = rowWarnings.get(radnik.id);
+    const row = document.createElement('div');
+    row.className = 'plocice-row' + (warning ? ' has-gap' : '');
+
+    const rasponCol = document.createElement('span');
+    rasponCol.className = 'col-raspon';
+    rasponCol.textContent = `${radnik.pocetna}–${radnik.krajnja}`;
+    if (warning) {
+      const warnIcon = document.createElement('span');
+      warnIcon.className = 'row-warn-icon';
+      warnIcon.textContent = '⚠️';
+      warnIcon.title = warning;
+      rasponCol.appendChild(warnIcon);
+    }
+    row.appendChild(rasponCol);
+
+    const radnikCol = document.createElement('span');
+    radnikCol.className = 'col-radnik';
+    radnikCol.textContent = radnik.ime;
+    row.appendChild(radnikCol);
+
+    const odjelCol = document.createElement('span');
+    odjelCol.className = 'col-odjel';
+    odjelCol.textContent = radnik.odjelName;
+    odjelCol.title = radnik.odjelName;
+    row.appendChild(odjelCol);
+
+    const kolicinaCol = document.createElement('span');
+    kolicinaCol.className = 'col-kolicina';
+    kolicinaCol.textContent = `${radnik.kolicina} kom.`;
+    row.appendChild(kolicinaCol);
+
+    const paketiCol = document.createElement('span');
+    paketiCol.className = 'col-paketi';
+    paketiCol.textContent = radnik.brojPaketa ? `${radnik.brojPaketa} pak.` : '—';
+    row.appendChild(paketiCol);
+
+    list.appendChild(row);
+  });
+
+  listPanel.appendChild(list);
 }
 
 function renderOdjelPanel(odjel) {
@@ -1453,6 +1583,13 @@ function initPlocice() {
     addOdjel(state.user, name);
     input.value = '';
     renderPlociceView();
+  });
+
+  $$('#plociceSubtabs button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.plociceView = btn.dataset.plociceview;
+      renderPlociceView();
+    });
   });
 }
 
