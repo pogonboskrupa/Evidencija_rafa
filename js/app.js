@@ -324,7 +324,7 @@ function initNav() {
 function buildLegendHTML() {
   return Object.values(DAY_TYPES)
     .map(
-      (t) => `<span class="legend-item"><span class="legend-dot" style="background:${t.color}"></span>${t.label}</span>`
+      (t) => `<span class="legend-item"><span class="legend-dot" style="background-color:${t.color}"></span>${t.label}</span>`
     )
     .join('');
 }
@@ -442,7 +442,7 @@ function renderEntryView() {
     typeCol.className = 'col-type';
     if (rec && rec.type && DAY_TYPES[rec.type]) {
       const type = DAY_TYPES[rec.type];
-      typeCol.innerHTML = `<span class="day-badge" style="background:${type.color}">${type.label}</span>`;
+      typeCol.innerHTML = `<span class="day-badge" style="background-color:${type.color}">${type.label}</span>`;
     } else {
       typeCol.innerHTML = `<span class="day-badge empty-badge">+ Dodaj unos</span>`;
     }
@@ -521,7 +521,7 @@ function typeOptionHTML(key) {
   const t = DAY_TYPES[key];
   return `<label class="type-option" data-key="${key}">
     <input type="radio" name="dayType" value="${key}" />
-    <span class="legend-dot" style="background:${t.color}"></span>
+    <span class="legend-dot" style="background-color:${t.color}"></span>
     <span>${t.label}</span>
   </label>`;
 }
@@ -810,7 +810,7 @@ function styleMiniDayCell(el, rec) {
   const titleParts = [];
   if (rec && rec.type && DAY_TYPES[rec.type]) {
     el.classList.add('filled');
-    el.style.background = DAY_TYPES[rec.type].color;
+    el.style.backgroundColor = DAY_TYPES[rec.type].color;
     const detail = extraText(rec);
     titleParts.push(DAY_TYPES[rec.type].label + (detail ? ` — ${detail}` : ''));
   }
@@ -1000,7 +1000,7 @@ function renderCalendarMonthList() {
       const type = DAY_TYPES[rec.type];
       const badge = document.createElement('span');
       badge.className = 'day-badge';
-      badge.style.background = type.color;
+      badge.style.backgroundColor = type.color;
       badge.textContent = type.label;
       heading.appendChild(badge);
 
@@ -1086,7 +1086,7 @@ function renderTaskDayWorkInfo(dateKey) {
   const type = DAY_TYPES[rec.type];
   const badge = document.createElement('span');
   badge.className = 'day-badge';
-  badge.style.background = type.color;
+  badge.style.backgroundColor = type.color;
   badge.textContent = type.label;
   box.appendChild(badge);
 

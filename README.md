@@ -36,7 +36,7 @@ Aplikacija je statička (HTML/CSS/vanilla JavaScript, bez poslužitelja) i radi 
 - **Sažetak mjeseca** ispod liste dana (radni dani, stabla, površina, kilometraža, odsustva, zadaci).
 - **Instalacija kao aplikacija (PWA)** — aplikacija se može instalirati na telefon ili računar i radi bez internet konekcije.
 - Nazivi mjeseci po bosanskoj jezičkoj normi (januar, februar, mart ... juni, juli, august ...).
-- Moderan, svijetlo zeleni dizajn: čista tipografija, boje kategorija umjesto ikona, te suptilna slojevita silueta šume kao ambijentalna pozadina.
+- Moderan, svijetlo zeleni dizajn: gradijentni akcenti na logu, dugmadima i aktivnim elementima, boje kategorija za vrste dana, ikone u glavnoj navigaciji, suptilne animacije (prelazak između kartica, hover/press stanja) te slojevita silueta šume kao ambijentalna pozadina.
 
 ## Pokretanje lokalno
 
