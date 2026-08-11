@@ -1772,8 +1772,18 @@ main {
      odjelima i punim tabelama odjednom. */
   #plociceListView, #plociceDetailView { display: none !important; }
   .print-only { display: block; }
-  .print-odjel-section { break-inside: avoid; margin-bottom: 18px; }
+  /* Odjel može imati na desetine radnika (i preko 10.000 pločica ukupno) —
+     cijela sekcija se NE drži zajedno (break-inside:avoid bi je gurnulo u
+     jedan neprekinut, potencijalno višestranični blok); umjesto toga tabela
+     se slobodno lomi po stranicama, sa zaglavljem koje se ponavlja na svakoj
+     (podrazumijevano ponašanje <thead> pri ispisu), a samo naslov odjela i
+     pojedinačni redovi ostaju netaknuti. */
+  .print-odjel-section { margin-bottom: 18px; }
+  .print-odjel-section h3 { break-after: avoid; }
+  .plocice-warning { break-inside: avoid; }
   .print-plocice-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
+  .print-plocice-table thead { display: table-header-group; }
+  .print-plocice-table tr { break-inside: avoid; }
   .print-plocice-table th, .print-plocice-table td {
     border: 1px solid #ccc;
     padding: 4px 8px;

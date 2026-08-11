@@ -76,6 +76,15 @@ function formatDateShort(dateKey) {
   return `${d}.${m}.${y}.`;
 }
 
+// Razdvaja hiljade tačkom (bosanska konvencija) — bitno u Rasporedu pločica,
+// gdje jedan odjel zna imati i preko 10.000 zaduženih pločica. Ručni regex
+// umjesto toLocaleString('bs-BA') — potonji u nekim okruženjima (npr. sužena
+// ICU podrška u pregledniku) tiho odustaje od bosanskog formata i vrati
+// razdvajanje zarezom, pa se ne može osloniti na dostupnost tih podataka.
+function formatBroj(n) {
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
 // Monday = 0 ... Sunday = 6
 function mondayIndex(jsDay) {
   return (jsDay + 6) % 7;
@@ -1221,9 +1230,9 @@ function computeOdjelIssues(odjel) {
     const prev = sorted[i - 1];
     const cur = sorted[i];
     if (cur.pocetna > prev.krajnja + 1) {
-      issues.push({ id: cur.id, msg: `Praznina: pločice ${prev.krajnja + 1}–${cur.pocetna - 1} nisu dodijeljene nijednom radniku (prije "${cur.ime}").` });
+      issues.push({ id: cur.id, msg: `Praznina: pločice ${formatBroj(prev.krajnja + 1)}–${formatBroj(cur.pocetna - 1)} nisu dodijeljene nijednom radniku (prije "${cur.ime}").` });
     } else if (cur.pocetna <= prev.krajnja) {
-      issues.push({ id: cur.id, msg: `Preklapanje: "${prev.ime}" (${prev.pocetna}–${prev.krajnja}) i "${cur.ime}" (${cur.pocetna}–${cur.krajnja}) dijele iste pločice.` });
+      issues.push({ id: cur.id, msg: `Preklapanje: "${prev.ime}" (${formatBroj(prev.pocetna)}–${formatBroj(prev.krajnja)}) i "${cur.ime}" (${formatBroj(cur.pocetna)}–${formatBroj(cur.krajnja)}) dijele iste pločice.` });
     }
   }
   return { sorted, issues };
@@ -1272,7 +1281,7 @@ function renderPlocicePrintView(odjeli) {
     section.className = 'print-odjel-section';
 
     const h3 = document.createElement('h3');
-    h3.textContent = `${odjel.name} — ${odjel.radnici.length} ${odjel.radnici.length === 1 ? 'radnik' : 'radnika'}, ${totalPlocica} pločica`;
+    h3.textContent = `${odjel.name} — ${formatBroj(odjel.radnici.length)} ${odjel.radnici.length === 1 ? 'radnik' : 'radnika'}, ${formatBroj(totalPlocica)} pločica`;
     section.appendChild(h3);
 
     if (issues.length) {
@@ -1297,7 +1306,7 @@ function renderPlocicePrintView(odjeli) {
       const tbody = document.createElement('tbody');
       sorted.forEach((r) => {
         const tr = document.createElement('tr');
-        [r.ime, `${r.pocetna}–${r.krajnja}`, `${r.kolicina}`, r.brojPaketa ? `${r.brojPaketa}` : '—', r.datum ? formatDateShort(r.datum) : '—']
+        [r.ime, `${formatBroj(r.pocetna)}–${formatBroj(r.krajnja)}`, formatBroj(r.kolicina), r.brojPaketa ? formatBroj(r.brojPaketa) : '—', r.datum ? formatDateShort(r.datum) : '—']
           .forEach((text) => {
             const td = document.createElement('td');
             td.textContent = text;
@@ -1352,7 +1361,7 @@ function renderOdjeliCards(odjeli) {
 
     const summary = document.createElement('div');
     summary.className = 'odjel-card-summary';
-    summary.textContent = `${odjel.radnici.length} ${odjel.radnici.length === 1 ? 'radnik' : 'radnika'} · ${totalPlocica} pločica`;
+    summary.textContent = `${formatBroj(odjel.radnici.length)} ${odjel.radnici.length === 1 ? 'radnik' : 'radnika'} · ${formatBroj(totalPlocica)} pločica`;
     main.appendChild(summary);
 
     card.appendChild(main);
@@ -1401,7 +1410,7 @@ function renderOdjelDetail(odjel) {
   $('#odjelDetailName').textContent = odjel.name;
 
   const totalPlocica = odjel.radnici.reduce((sum, r) => sum + r.kolicina, 0);
-  $('#odjelDetailSummary').textContent = `${odjel.radnici.length} ${odjel.radnici.length === 1 ? 'radnik' : 'radnika'} · ${totalPlocica} pločica`;
+  $('#odjelDetailSummary').textContent = `${formatBroj(odjel.radnici.length)} ${odjel.radnici.length === 1 ? 'radnik' : 'radnika'} · ${formatBroj(totalPlocica)} pločica`;
 
   const { sorted, issues } = computeOdjelIssues(odjel);
   const rowWarnings = new Map(issues.map((i) => [i.id, i.msg]));
@@ -1462,17 +1471,17 @@ function renderOdjelDetail(odjel) {
 
       const rasponCol = document.createElement('span');
       rasponCol.className = 'col-raspon';
-      rasponCol.textContent = `${radnik.pocetna}–${radnik.krajnja}`;
+      rasponCol.textContent = `${formatBroj(radnik.pocetna)}–${formatBroj(radnik.krajnja)}`;
       row.appendChild(rasponCol);
 
       const kolicinaCol = document.createElement('span');
       kolicinaCol.className = 'col-kolicina';
-      kolicinaCol.textContent = `${radnik.kolicina} kom.`;
+      kolicinaCol.textContent = `${formatBroj(radnik.kolicina)} kom.`;
       row.appendChild(kolicinaCol);
 
       const paketiCol = document.createElement('span');
       paketiCol.className = 'col-paketi';
-      paketiCol.textContent = radnik.brojPaketa ? `${radnik.brojPaketa} pak.` : '—';
+      paketiCol.textContent = radnik.brojPaketa ? `${formatBroj(radnik.brojPaketa)} pak.` : '—';
       row.appendChild(paketiCol);
 
       const datumCol = document.createElement('span');
@@ -1632,8 +1641,8 @@ function renderAddRadnikForm(odjel) {
     }
     const kolicina = mode === 'paketi' ? rawKolicina * PLOCICE_PAKET_SIZE : rawKolicina;
     const krajnja = pocetna + kolicina - 1;
-    const paketiText = mode === 'paketi' ? ` (${rawKolicina} paketa)` : '';
-    preview.textContent = `Raspon: ${pocetna}–${krajnja} · ${kolicina} pločica${paketiText}`;
+    const paketiText = mode === 'paketi' ? ` (${formatBroj(rawKolicina)} paketa)` : '';
+    preview.textContent = `Raspon: ${formatBroj(pocetna)}–${formatBroj(krajnja)} · ${formatBroj(kolicina)} pločica${paketiText}`;
   }
 
   // Broj paketa/pločica polje se popunjava tek nakon attachNumberField (koje
