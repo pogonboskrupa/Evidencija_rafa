@@ -153,7 +153,6 @@ input, select { font: inherit; }
   width: 62px;
   height: 62px;
   margin: 0 auto 16px;
-  color: #fff;
   background: var(--gradient-primary);
   border-radius: 20px;
   padding: 13px;
@@ -543,7 +542,6 @@ input, select { font: inherit; }
 .brand .logo {
   width: 27px;
   height: 27px;
-  color: #fff;
   background: var(--gradient-primary);
   border-radius: 8px;
   padding: 4.5px;
