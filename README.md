@@ -75,6 +75,17 @@ Strategija keširanja je "mreža prvo, keš kao rezerva": kada ste online uvijek
 
 > **Napomena:** instalacija i rad offline zahtijevaju HTTPS (ili `localhost`). GitHub Pages servira preko HTTPS-a, pa je uvjet zadovoljen.
 
+## Pakovanje za prodavnice aplikacija (PWABuilder)
+
+Aplikacija je pripremljena za [PWABuilder](https://www.pwabuilder.com/) — alat koji od PWA-a pravi instalacione pakete za Microsoft Store (Windows), Google Play (Android, preko Trusted Web Activity) i iOS/App Store:
+
+- **Manifest** (`manifest.webmanifest`) sadrži pun skup ikona (48–512px, uključujući "maskable" verzije za Android adaptivne ikone), `screenshots` (desktop i mobilni prikaz, za bogatiji install/store UI) i `shortcuts` (prečice na "Evidencija rada", "Kalendar" i "Raspored pločica" preko `?view=...` parametra, koji aplikacija prilikom učitavanja prepoznaje i odmah otvara traženu karticu).
+- **Service worker** (`sw.js`) je već registrovan i podržava potpun rad offline (vidi iznad).
+
+Postupak: otvorite [pwabuilder.com](https://www.pwabuilder.com/), unesite URL objavljene stranice (npr. `https://<korisnik>.github.io/<repo>/`), sačekajte analizu (manifest/service worker/ikone bi trebale proći bez upozorenja), pa odaberite platformu za pakovanje.
+
+Ako se ikone/manifest promijene, pokrenite ponovo generisanje preko `icons/` (skripta koja generiše sve veličine iz istog SVG zapisa) i podignite `VERSION` u `sw.js` da se stari keš zamijeni.
+
 ## Napomena o podacima
 
 Budući da je riječ o potpuno statičkoj aplikaciji bez poslužitelja, svi korisnički računi i unosi spremaju se lokalno u pregledniku (`localStorage`). Podaci nisu dijeljeni između različitih uređaja/preglednika. PIN se prije spremanja hashira (SHA-256 sa solju), no imajte na umu da ovo nije zamjena za pravu poslužiteljsku autentikaciju — prikladno je za osobnu/internu evidenciju.

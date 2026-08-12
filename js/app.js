@@ -272,6 +272,15 @@ function initials(name) {
     .toUpperCase();
 }
 
+// Podržava PWA prečice (manifest "shortcuts", npr. dugi pritisak na ikonu
+// aplikacije) koje otvaraju direktno na određenu karticu preko ?view=... u
+// URL-u — npr. "./?view=calendar" za prečicu "Kalendar".
+function requestedView() {
+  const requested = new URLSearchParams(window.location.search).get('view');
+  const valid = ['entry', 'calendar', 'plocice', 'overview', 'settings'];
+  return valid.includes(requested) ? requested : 'entry';
+}
+
 function enterApp(user) {
   state.user = user;
   $('#authScreen').hidden = true;
@@ -280,8 +289,7 @@ function enterApp(user) {
   $('#settingsUserName').textContent = user.fullName;
   $('#settingsUserLabel').textContent = `@${user.username}`;
   renderLegends();
-  switchView('entry');
-  renderEntryView();
+  switchView(requestedView());
   maybeShowTaskReminder();
 }
 

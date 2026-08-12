@@ -5,12 +5,14 @@
 // Aplikacija je mala (nekoliko desetina kB), tako da je cijena ovog pristupa
 // zanemariva, a ponašanje predvidivo: online uvijek svježe, offline iz keša.
 
-const VERSION = 'v6';
+const VERSION = 'v7';
 const CACHE = `evidencija-rafa-${VERSION}`;
 const NETWORK_TIMEOUT_MS = 4000;
 
 // Relativne putanje se razrješavaju u odnosu na lokaciju service workera, pa
 // aplikacija radi i kada je objavljena u poddirektoriju (GitHub Pages).
+// Snimci ekrana (screenshots/) se namjerno ne keširaju — koriste ih samo
+// prodavnice/instalacioni UI prije instalacije, ne sama aplikacija dok radi.
 const SHELL = [
   './',
   './index.html',
@@ -22,9 +24,18 @@ const SHELL = [
   './js/pwa.js',
   './js/keypad.js',
   './manifest.webmanifest',
+  './icons/favicon-32.png',
   './icons/favicon-64.png',
+  './icons/icon-48.png',
+  './icons/icon-72.png',
+  './icons/icon-96.png',
+  './icons/icon-128.png',
+  './icons/icon-144.png',
+  './icons/icon-152.png',
   './icons/icon-192.png',
+  './icons/icon-384.png',
   './icons/icon-512.png',
+  './icons/icon-maskable-192.png',
   './icons/icon-maskable-512.png',
   './icons/apple-touch-icon.png',
 ];

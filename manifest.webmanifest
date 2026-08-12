@@ -1,7 +1,7 @@
 {
   "name": "Evidencija rada — Doznaka stabala",
   "short_name": "Evidencija rada",
-  "description": "Godišnja evidencija rada u doznaci stabala za sječu: radni dani, vlake, teren, odsustva i zadaci.",
+  "description": "Godišnja evidencija rada u doznaci stabala za sječu: radni dani, vlake, teren, odsustva, zadaci i raspored markirnih pločica po odjelima.",
   "lang": "bs",
   "dir": "ltr",
   "start_url": "./",
@@ -13,23 +13,62 @@
   "theme_color": "#2f7d4f",
   "categories": ["productivity", "business", "utilities"],
   "icons": [
+    { "src": "icons/icon-48.png", "sizes": "48x48", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-72.png", "sizes": "72x72", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
     {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
+      "src": "screenshots/desktop-evidencija.png",
+      "sizes": "1280x800",
       "type": "image/png",
-      "purpose": "any"
+      "form_factor": "wide",
+      "label": "Evidencija rada — mjesečni unos radnih dana"
     },
     {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
+      "src": "screenshots/desktop-pregled.png",
+      "sizes": "1280x800",
       "type": "image/png",
-      "purpose": "any"
+      "form_factor": "wide",
+      "label": "Godišnji pregled sa statistikom i ispisom"
     },
     {
-      "src": "icons/icon-maskable-512.png",
-      "sizes": "512x512",
+      "src": "screenshots/mobile-evidencija.png",
+      "sizes": "390x844",
       "type": "image/png",
-      "purpose": "maskable"
+      "form_factor": "narrow",
+      "label": "Evidencija rada na mobilnom uređaju"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Evidencija rada",
+      "short_name": "Evidencija",
+      "description": "Otvori mjesečni unos radnih dana",
+      "url": "./?view=entry",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Kalendar",
+      "short_name": "Kalendar",
+      "description": "Otvori zadatke, termine i rokove",
+      "url": "./?view=calendar",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Raspored pločica",
+      "short_name": "Pločice",
+      "description": "Otvori raspored markirnih pločica po odjelima",
+      "url": "./?view=plocice",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96", "type": "image/png" }]
     }
   ]
 }
