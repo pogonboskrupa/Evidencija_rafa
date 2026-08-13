@@ -246,11 +246,32 @@ window.Storage = (function () {
 
   function ensurePlocice(user) {
     if (!user.plocice) user.plocice = { odjeli: [] };
+    if (!Array.isArray(user.plocice.knownRadnici)) user.plocice.knownRadnici = [];
     return user.plocice;
   }
 
   function getOdjeli(user) {
     return ensurePlocice(user).odjeli;
+  }
+
+  const KNOWN_RADNICI_LIMIT = 50;
+
+  // Imena radnika ranije unesenih u bilo koji odjel — ista ekipa (obično
+  // 7-8 ljudi) se iznova raspoređuje po odjelima, pa se ime pamti trajno
+  // (i nakon brisanja tog unosa) da ga korisnik ne mora ponovo tipkati.
+  // Najskorije korišteno ime je na vrhu liste.
+  function getKnownRadnici(user) {
+    return ensurePlocice(user).knownRadnici;
+  }
+
+  function rememberRadnikIme(user, ime) {
+    const trimmed = (ime || '').trim();
+    if (!trimmed) return;
+    const plocice = ensurePlocice(user);
+    plocice.knownRadnici = [
+      trimmed,
+      ...plocice.knownRadnici.filter((n) => n.toLowerCase() !== trimmed.toLowerCase()),
+    ].slice(0, KNOWN_RADNICI_LIMIT);
   }
 
   function addOdjel(user, name) {
@@ -282,6 +303,7 @@ window.Storage = (function () {
       datum: datum || null,
     };
     odjel.radnici.push(radnik);
+    rememberRadnikIme(user, radnik.ime);
     saveUser(user);
     return radnik;
   }
@@ -306,6 +328,7 @@ window.Storage = (function () {
     radnik.krajnja = pocetna + kolicina - 1;
     radnik.brojPaketa = brojPaketa || null;
     radnik.datum = datum || null;
+    rememberRadnikIme(user, radnik.ime);
     saveUser(user);
     return radnik;
   }
@@ -338,5 +361,6 @@ window.Storage = (function () {
     addRadnikToOdjel,
     updateRadnikInOdjel,
     deleteRadnikFromOdjel,
+    getKnownRadnici,
   };
 })();

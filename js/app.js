@@ -31,6 +31,7 @@ const {
   addRadnikToOdjel,
   updateRadnikInOdjel,
   deleteRadnikFromOdjel,
+  getKnownRadnici,
 } = window.Storage;
 const { computeYearStats } = window.Stats;
 const { renderForestBackdrop } = window.Forest;
@@ -1560,7 +1561,8 @@ function renderAddRadnikForm(odjel) {
     <h4 class="plocice-form-title"></h4>
     <div class="field">
       <label>Ime radnika</label>
-      <input type="text" class="radnik-ime-input" maxlength="80" placeholder="Ime i prezime" required />
+      <input type="text" class="radnik-ime-input" maxlength="80" placeholder="Ime i prezime" required list="radnikImeSuggestions" autocomplete="off" />
+      <datalist id="radnikImeSuggestions"></datalist>
     </div>
     <div class="field">
       <label>Način unosa</label>
@@ -1590,6 +1592,12 @@ function renderAddRadnikForm(odjel) {
 
   const formTitle = form.querySelector('.plocice-form-title');
   const imeInput = form.querySelector('.radnik-ime-input');
+  const imeSuggestions = form.querySelector('#radnikImeSuggestions');
+  getKnownRadnici(state.user).forEach((ime) => {
+    const option = document.createElement('option');
+    option.value = ime;
+    imeSuggestions.appendChild(option);
+  });
   const pocetnaInput = form.querySelector('.radnik-pocetna-input');
   const kolicinaInput = form.querySelector('.radnik-kolicina-input');
   const kolicinaLabel = form.querySelector('.radnik-kolicina-label');
