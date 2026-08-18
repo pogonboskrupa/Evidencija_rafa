@@ -157,6 +157,7 @@ function initAuthScreen() {
     setRegStepUI();
     regPin.reset();
     updateRegGate();
+    $('#regKeypad').hidden = true;
   }
 
   const regPin = createPinController({
@@ -210,12 +211,32 @@ function initAuthScreen() {
   });
   loginPin.setLocked(true);
 
+  // ---------- Tipkovnica se prikazuje tek na klik/dodir na PIN polje
+  // (tačkice) — ne odmah po otvaranju ekrana za prijavu. ----------
+  function revealKeypad(keypadEl) {
+    keypadEl.hidden = false;
+  }
+
+  function wirePinReveal(dotsEl, keypadEl) {
+    dotsEl.addEventListener('click', () => revealKeypad(keypadEl));
+    dotsEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        revealKeypad(keypadEl);
+      }
+    });
+  }
+
+  wirePinReveal($('#loginPinDots'), $('#loginKeypad'));
+  wirePinReveal($('#regPinDots'), $('#regKeypad'));
+
   // ---------- Prebacivanje kartica ----------
   function resetAuthForms() {
     loginForm.reset();
     registerForm.reset();
     loginPin.reset();
     loginPin.setLocked(!$('#loginUsername').value.trim());
+    $('#loginKeypad').hidden = true;
     resetRegPin();
     showAuthError('');
   }
@@ -253,8 +274,10 @@ function initAuthScreen() {
     if (document.activeElement?.tagName === 'INPUT') return;
 
     const active = tabLogin.classList.contains('active') ? loginPin : regPin;
+    const activeKeypad = tabLogin.classList.contains('active') ? $('#loginKeypad') : $('#regKeypad');
     if (/^[0-9]$/.test(e.key)) {
       e.preventDefault();
+      revealKeypad(activeKeypad);
       active.pressDigit(e.key);
     } else if (e.key === 'Backspace') {
       e.preventDefault();

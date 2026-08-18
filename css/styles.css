@@ -391,8 +391,23 @@ input, select { font: inherit; }
 .pin-dots {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 18px;
-  padding: 10px 0 4px;
+  padding: 13px 0;
+  margin: 2px 0 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pin-dots:hover { border-color: #b6cfaa; }
+
+.pin-dots:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3.5px rgba(47, 125, 79, 0.13);
 }
 
 .pin-dot {
