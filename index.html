@@ -2,6 +2,18 @@
 <html lang="bs">
 <head>
   <meta charset="UTF-8" />
+  <script>
+    // Postavlja temu (svijetla/tamna) PRIJE prvog iscrtavanja, da nema bljeska
+    // pogrešne teme pri učitavanju. Ista logika (i ključ u localStorage) kao
+    // js/app.js initTheme(), namjerno duplirana ovdje jer app.js stiže kasnije.
+    (function () {
+      try {
+        var pref = localStorage.getItem('evidencija_rafa_theme_v1') || 'system';
+        var dark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      } catch (e) {}
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evidencija rada — Doznaka stabala</title>
   <meta name="description" content="Godišnja evidencija rada za doznaku stabala, vlake, teren i ostale radne dane." />
@@ -277,6 +289,11 @@
             <h3 style="margin-bottom:14px;">Pregled cijele godine</h3>
             <div class="year-grid" id="yearGrid"></div>
           </div>
+
+          <div class="panel">
+            <h3 style="margin-bottom:14px;">Raspored pločica po radniku</h3>
+            <div id="plocicePerRadnikHost"></div>
+          </div>
         </section>
 
         <!-- ---- POSTAVKE ---- -->
@@ -303,6 +320,18 @@
               <div class="num-keypad-host settings-num-keypad-host" id="vacationDaysKeypadHost"></div>
             </form>
             <div id="settingsSaved" class="settings-note" style="margin-top:14px;" hidden>Postavke su spremljene.</div>
+          </div>
+
+          <div class="panel">
+            <h3>Izgled</h3>
+            <div class="field">
+              <label>Tema</label>
+              <div class="plocice-mode-toggle">
+                <label><input type="radio" name="theme-mode" value="system" /> Prati sistem</label>
+                <label><input type="radio" name="theme-mode" value="light" /> Svijetla</label>
+                <label><input type="radio" name="theme-mode" value="dark" /> Tamna</label>
+              </div>
+            </div>
           </div>
 
           <div class="panel">

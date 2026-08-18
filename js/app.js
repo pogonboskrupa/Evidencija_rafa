@@ -818,6 +818,52 @@ function renderOverviewView() {
   for (let m = 0; m < 12; m++) {
     yearGrid.appendChild(renderMiniMonth(year, m));
   }
+
+  renderPlocicePerRadnik();
+}
+
+// Zbirni pregled po radniku iz "Raspored pločica", kroz sve odjele — ista
+// mala ekipa (7-8 ljudi) se raspoređuje po više odjela, pa je korisno na
+// jednom mjestu vidjeti koliko je kome ukupno pločica/paketa dodijeljeno.
+function renderPlocicePerRadnik() {
+  const host = $('#plocicePerRadnikHost');
+  const odjeli = getOdjeli(state.user);
+
+  const byIme = new Map();
+  odjeli.forEach((odjel) => {
+    odjel.radnici.forEach((r) => {
+      const key = r.ime.trim().toLowerCase();
+      const entry = byIme.get(key) || { ime: r.ime.trim(), odjeliSet: new Set(), pločice: 0, paketi: 0 };
+      entry.odjeliSet.add(odjel.name);
+      entry.pločice += r.kolicina;
+      entry.paketi += r.brojPaketa || 0;
+      byIme.set(key, entry);
+    });
+  });
+
+  const rows = [...byIme.values()].sort((a, b) => a.ime.localeCompare(b.ime, 'bs'));
+
+  if (!rows.length) {
+    host.innerHTML = '<p class="form-hint">Nema unesenih radnika u Rasporedu pločica.</p>';
+    return;
+  }
+
+  const table = document.createElement('table');
+  table.className = 'plocice-per-radnik-table';
+  table.innerHTML = '<thead><tr><th>Radnik</th><th>Odjeli</th><th>Ukupno pločica</th><th>Ukupno paketa</th></tr></thead>';
+  const tbody = document.createElement('tbody');
+  rows.forEach((r) => {
+    const tr = document.createElement('tr');
+    [r.ime, String(r.odjeliSet.size), formatBroj(r.pločice), r.paketi ? formatBroj(r.paketi) : '—'].forEach((text) => {
+      const td = document.createElement('td');
+      td.textContent = text;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  host.innerHTML = '';
+  host.appendChild(table);
 }
 
 // Zajednička logika za bojenje ćelije dana u mini-mjesecu (koristi je i
@@ -1720,6 +1766,46 @@ function initPlocice() {
   $('#plocicePrintBtn').addEventListener('click', () => window.print());
 }
 
+/* ==================== TEMA ==================== */
+// Postavka je uređaj-nivo (ne dio korisničkog zapisa) jer vrijedi i prije
+// prijave, na ekranu za prijavu — namjerno duplirana u <head> inline
+// skripti u index.html, koja temu postavlja PRIJE prvog iscrtavanja da nema
+// bljeska pogrešne teme; ovdje se samo prati sistemska promjena uživo i
+// puni UI prekidač u Postavkama.
+const THEME_KEY = 'evidencija_rafa_theme_v1';
+const darkMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function getThemePreference() {
+  const saved = localStorage.getItem(THEME_KEY);
+  return saved === 'light' || saved === 'dark' ? saved : 'system';
+}
+
+function applyTheme(pref) {
+  const dark = pref === 'dark' || (pref === 'system' && darkMediaQuery.matches);
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) metaTheme.setAttribute('content', dark ? '#0e1712' : '#2f7d4f');
+}
+
+function setThemePreference(pref) {
+  localStorage.setItem(THEME_KEY, pref);
+  applyTheme(pref);
+}
+
+function initTheme() {
+  applyTheme(getThemePreference());
+  darkMediaQuery.addEventListener('change', () => {
+    if (getThemePreference() === 'system') applyTheme('system');
+  });
+
+  $$('input[name="theme-mode"]').forEach((radio) => {
+    radio.checked = radio.value === getThemePreference();
+    radio.addEventListener('change', () => {
+      if (radio.checked) setThemePreference(radio.value);
+    });
+  });
+}
+
 /* ==================== POSTAVKE ==================== */
 
 function populateSettingsYears() {
@@ -1949,6 +2035,7 @@ function init() {
   initCalendarNav();
   initPlocice();
   initSettings();
+  initTheme();
 
   // Nema pozadinskog push servera — dok je aplikacija otvorena, periodično se
   // provjerava da li dan/zadaci opravdavaju podsjetnik (npr. ponoć je prošla

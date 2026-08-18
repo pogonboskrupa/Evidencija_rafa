@@ -25,6 +25,10 @@
   --text: #16241a;
   --text-soft: #405044;
   --text-muted: #6b7d70;
+  /* Naslovi/isticanje teksta — odvojeno od --primary-dark (koji ostaje
+     nepromijenjen kao dio brend gradijenta) jer u tamnoj temi naslov mora
+     biti SVJETLIJI da bude čitljiv na tamnoj pozadini. */
+  --heading: var(--primary-dark);
 
   /* Linije */
   --border: #e0ebd9;
@@ -57,6 +61,47 @@
   --font-num: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, monospace;
 }
 
+/* Tamna tema — uključuje se preko [data-theme] atributa na <html>, koji
+   postavlja rani inline skript u <head> (prije prve iscrtane slike, da nema
+   bljeska pogrešne teme). Brend zelena skala (--primary*, --accent*,
+   --gradient-primary) namjerno ostaje ista u obje teme — mijenjaju se samo
+   površine/tekst/sjene, plus --heading koji u tamnoj temi mora biti
+   svjetliji da naslovi ostanu čitljivi. */
+:root[data-theme="dark"] {
+  --bg: #0e1712;
+  --bg-tint: #13201a;
+  --surface: #17251d;
+  --surface-alt: #1d2c23;
+  --surface-sunken: #0f1a14;
+
+  --primary-soft: #1d3227;
+  --primary-softer: #17271f;
+
+  --gradient-surface: linear-gradient(165deg, #1c2b22 0%, var(--surface-alt) 100%);
+
+  --heading: #8fe0ac;
+  --text: #e8f2ea;
+  --text-soft: #bdccc0;
+  --text-muted: #8ba191;
+
+  --border: #28392f;
+  --border-strong: #3a4f40;
+
+  --weekend-bg: #202e26;
+  --weekend-bg-hover: #28382e;
+  --weekend-border: #33473a;
+  --weekend-text: #a8b8ac;
+
+  --danger-light: #3a221e;
+  --danger-border: #5c342c;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 5px 14px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 3px 8px rgba(0, 0, 0, 0.4), 0 14px 32px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.45), 0 36px 72px rgba(0, 0, 0, 0.5);
+  --shadow-primary: 0 2px 6px rgba(0, 0, 0, 0.45), 0 10px 22px rgba(0, 0, 0, 0.4);
+}
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -81,7 +126,7 @@ body {
 
 h1, h2, h3, h4 {
   margin: 0;
-  color: var(--primary-dark);
+  color: var(--heading);
   letter-spacing: -0.02em;
   line-height: 1.25;
   font-weight: 700;
@@ -216,7 +261,7 @@ input, select { font: inherit; }
 
 .auth-tabs button.active {
   background: var(--surface);
-  color: var(--primary-dark);
+  color: var(--heading);
   box-shadow: var(--shadow-xs);
 }
 
@@ -242,7 +287,7 @@ input, select { font: inherit; }
   text-align: center;
 }
 
-.ios-hint strong { color: var(--primary-dark); }
+.ios-hint strong { color: var(--heading); }
 
 /* ---------- Forme ---------- */
 .field {
@@ -341,7 +386,7 @@ input, select { font: inherit; }
   padding: 2px 4px;
 }
 
-.pin-back:hover { color: var(--primary-dark); }
+.pin-back:hover { color: var(--heading); }
 
 .pin-dots {
   display: flex;
@@ -478,7 +523,7 @@ input, select { font: inherit; }
 
 .btn-secondary {
   background: var(--surface);
-  color: var(--primary-dark);
+  color: var(--heading);
   border-color: var(--border-strong);
   box-shadow: var(--shadow-xs);
 }
@@ -534,7 +579,7 @@ input, select { font: inherit; }
   gap: 9px;
   font-weight: 800;
   font-size: 15px;
-  color: var(--primary-dark);
+  color: var(--heading);
   letter-spacing: -0.015em;
   white-space: nowrap;
 }
@@ -578,11 +623,11 @@ input, select { font: inherit; }
 
 .nav-tabs button svg { width: 15px; height: 15px; flex: none; opacity: 0.85; }
 
-.nav-tabs button:hover { color: var(--primary-dark); }
+.nav-tabs button:hover { color: var(--heading); }
 
 .nav-tabs button.active {
   background: var(--surface);
-  color: var(--primary-dark);
+  color: var(--heading);
   box-shadow: var(--shadow-xs), 0 0 0 1px rgba(31, 92, 57, 0.06);
 }
 
@@ -613,11 +658,11 @@ input, select { font: inherit; }
   transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.subtabs button:hover { color: var(--primary-dark); }
+.subtabs button:hover { color: var(--heading); }
 
 .subtabs button.active {
   background: var(--surface);
-  color: var(--primary-dark);
+  color: var(--heading);
   box-shadow: var(--shadow-xs);
 }
 
@@ -687,7 +732,7 @@ main {
   height: 32px;
   font-size: 17px;
   line-height: 1;
-  color: var(--primary-dark);
+  color: var(--heading);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -703,7 +748,7 @@ main {
   min-width: 176px;
   text-align: center;
   font-size: 17px;
-  color: var(--primary-dark);
+  color: var(--heading);
   text-transform: capitalize;
   letter-spacing: -0.015em;
 }
@@ -914,7 +959,7 @@ main {
 }
 
 .month-summary strong {
-  color: var(--primary-dark);
+  color: var(--heading);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -1025,7 +1070,7 @@ main {
 .type-option.selected {
   border-color: var(--primary);
   background: var(--primary-soft);
-  color: var(--primary-dark);
+  color: var(--heading);
   box-shadow: 0 0 0 1.5px var(--primary) inset, var(--shadow-xs);
 }
 
@@ -1159,7 +1204,7 @@ main {
 }
 
 .task-chip.all-done {
-  color: var(--primary-dark);
+  color: var(--heading);
   background: var(--primary-soft);
   border-color: #c9e3bd;
 }
@@ -1229,7 +1274,7 @@ main {
 .stat-card .stat-value {
   font-size: 21px;
   font-weight: 800;
-  color: var(--primary-dark);
+  color: var(--heading);
   line-height: 1.15;
   letter-spacing: -0.025em;
   font-variant-numeric: tabular-nums;
@@ -1261,7 +1306,7 @@ main {
   font-weight: 700;
   text-transform: capitalize;
   margin-bottom: 9px;
-  color: var(--primary-dark);
+  color: var(--heading);
 }
 
 .mini-grid {
@@ -1371,7 +1416,7 @@ main {
   gap: 8px;
   font-weight: 700;
   font-size: 13.5px;
-  color: var(--primary-dark);
+  color: var(--heading);
   margin-bottom: 7px;
 }
 
@@ -1440,7 +1485,7 @@ main {
 .odjel-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .odjel-card-main { min-width: 0; }
-.odjel-card-name { font-weight: 700; font-size: 15.5px; color: var(--primary-dark); }
+.odjel-card-name { font-weight: 700; font-size: 15.5px; color: var(--heading); }
 .odjel-card-summary { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
 .odjel-card-actions { display: flex; align-items: center; gap: 12px; flex: none; }
 .odjel-card-chevron { color: #b5c4ac; font-size: 16px; line-height: 1; }
@@ -1502,6 +1547,29 @@ main {
 .col-kolicina { width: 110px; flex: none; color: var(--text-soft); }
 .col-paketi { width: 90px; flex: none; color: var(--text-muted); }
 .col-datum { width: 100px; flex: none; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+.plocice-per-radnik-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.plocice-per-radnik-table th,
+.plocice-per-radnik-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.plocice-per-radnik-table th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: var(--surface-alt);
+}
+.plocice-per-radnik-table td:first-child { font-weight: 650; }
+.plocice-per-radnik-table td:not(:first-child) { font-variant-numeric: tabular-nums; color: var(--text-soft); }
+.plocice-per-radnik-table tr:last-child td { border-bottom: none; }
 .col-actions { width: 56px; flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
 
 .row-warn-icon { margin-left: 4px; cursor: help; }
@@ -1521,7 +1589,7 @@ main {
    pokazivača između mousedown i click događaja). */
 .plocice-keypad-host { grid-column: 1 / -1; }
 
-.plocice-mode-toggle { display: flex; gap: 16px; align-items: center; height: 44px; }
+.plocice-mode-toggle { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; min-height: 44px; }
 .plocice-mode-toggle label {
   display: flex;
   align-items: center;
@@ -1536,7 +1604,7 @@ main {
   grid-column: 1 / -1;
   font-size: 13px;
   font-weight: 600;
-  color: var(--primary-dark);
+  color: var(--heading);
   min-height: 18px;
 }
 
@@ -1544,7 +1612,7 @@ main {
   grid-column: 1 / -1;
   margin: 0;
   font-size: 14px;
-  color: var(--primary-dark);
+  color: var(--heading);
 }
 
 .plocice-form-actions {
@@ -1571,7 +1639,7 @@ main {
   padding: 11px 14px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--primary-dark);
+  color: var(--heading);
 }
 
 .settings-note.error {
@@ -1627,7 +1695,7 @@ main {
 .account-name {
   font-weight: 700;
   font-size: 15px;
-  color: var(--primary-dark);
+  color: var(--heading);
 }
 
 .account-handle {
