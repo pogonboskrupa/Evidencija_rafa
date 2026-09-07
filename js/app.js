@@ -504,7 +504,7 @@ function renderEntryView() {
     const { total, done } = taskCounts(rec);
     if (total) {
       const chip = document.createElement('span');
-      chip.className = 'task-chip' + (done === total ? ' all-done' : '');
+      chip.className = 'task-chip ' + (done === total ? 'all-done' : 'pending');
       chip.textContent = `Zadaci ${done}/${total}`;
       chip.title = rec.tasks.map((t) => `${t.done ? '✓' : '•'} ${t.text}`).join('\n');
       extraCol.appendChild(chip);
@@ -885,6 +885,21 @@ function renderPlocicePerRadnik() {
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
+
+  // Zbirni red — ukupno kroz sve radnike (isti broj koji piše i na karticama
+  // odjela, samo sabran na jednom mjestu).
+  const ukupnoPlocica = rows.reduce((sum, r) => sum + r.pločice, 0);
+  const ukupnoPaketa = rows.reduce((sum, r) => sum + r.paketi, 0);
+  const tfoot = document.createElement('tfoot');
+  const totalRow = document.createElement('tr');
+  ['Ukupno', String(odjeli.length), formatBroj(ukupnoPlocica), ukupnoPaketa ? formatBroj(ukupnoPaketa) : '—'].forEach((text) => {
+    const td = document.createElement('td');
+    td.textContent = text;
+    totalRow.appendChild(td);
+  });
+  tfoot.appendChild(totalRow);
+  table.appendChild(tfoot);
+
   host.innerHTML = '';
   host.appendChild(table);
 }
@@ -1572,7 +1587,7 @@ function renderOdjelDetail(odjel) {
 
       const editRadnikBtn = document.createElement('button');
       editRadnikBtn.type = 'button';
-      editRadnikBtn.className = 'task-del';
+      editRadnikBtn.className = 'row-action';
       editRadnikBtn.title = 'Izmijeni radnika';
       editRadnikBtn.setAttribute('aria-label', 'Izmijeni radnika');
       editRadnikBtn.textContent = '✎';
@@ -1584,7 +1599,7 @@ function renderOdjelDetail(odjel) {
 
       const delRadnikBtn = document.createElement('button');
       delRadnikBtn.type = 'button';
-      delRadnikBtn.className = 'task-del';
+      delRadnikBtn.className = 'row-action is-delete';
       delRadnikBtn.title = 'Obriši radnika';
       delRadnikBtn.setAttribute('aria-label', 'Obriši radnika');
       delRadnikBtn.textContent = '×';
