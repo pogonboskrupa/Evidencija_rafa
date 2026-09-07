@@ -503,6 +503,10 @@ input, select { font: inherit; }
 
 .num-keypad-host .keypad { margin: 10px auto 14px; }
 
+/* Zatvorena tipkovnica ne smije zauzimati red u gridu (praznina između polja
+   i dugmeta za potvrdu). */
+.num-keypad-host:empty { display: none; }
+
 .num-keypad-done { width: 100%; }
 
 .settings-num-keypad-host { grid-column: 1 / -1; }
@@ -877,6 +881,7 @@ main {
 }
 
 .day-row.today.weekend { background: #cfdcc6; }
+:root[data-theme="dark"] .day-row.today.weekend { background: #2a3b30; }
 
 .day-row .col-date {
   font-weight: 650;
@@ -918,7 +923,10 @@ main {
 
 .day-row.weekend .col-extra { color: var(--weekend-text); }
 
-.day-row .col-extra:empty { display: none; }
+/* Na širokom ekranu prazna kolona "Detalji" MORA ostati u toku (flex: 1) —
+   inače se strelica "›" skupi uz vrstu dana umjesto da stoji uz desnu ivicu
+   reda. Na mobilnom je to zaseban red ispod, pa se prazna sakriva (vidi
+   media query niže). */
 
 .day-row .col-chevron {
   color: #b5c4ac;
@@ -1224,7 +1232,24 @@ main {
   border-color: #c9e3bd;
 }
 
+/* Isti dogovor o bojama kao tačkice u kalendaru: zeleno = sve završeno,
+   žuto = nešto još stoji nezavršeno. */
+.task-chip.pending {
+  color: #8a6420;
+  background: #fdf3e0;
+  border-color: #f0dcb4;
+}
+
+:root[data-theme="dark"] .task-chip.pending {
+  color: #e9c37a;
+  background: #33280f;
+  border-color: #574417;
+}
+
 .day-row.weekend .task-chip { background: #eceee9; border-color: #bcc4b6; }
+:root[data-theme="dark"] .day-row.weekend .task-chip { background: #27332b; border-color: #3c4d42; }
+:root[data-theme="dark"] .day-row.weekend .task-chip.pending { background: #33280f; border-color: #574417; }
+:root[data-theme="dark"] .day-row.weekend .task-chip.all-done { background: var(--primary-soft); border-color: #2f5c3f; }
 
 /* Akcije ostaju prikvačene za dno modala i kada se sadržaj skroluje. */
 .modal-actions {
@@ -1459,11 +1484,15 @@ main {
 /* ---------- Raspored pločica ---------- */
 .inline-add-form {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   max-width: 520px;
   margin-top: 14px;
 }
-.inline-add-form input { flex: 1; }
+/* min-width:0 — polje za unos ima vlastitu podrazumijevanu (intrinzičnu)
+   širinu, pa se bez ovoga ne skuplja i gura dugme van ekrana na ~360px. */
+.inline-add-form input { flex: 1 1 160px; min-width: 0; }
+.inline-add-form .btn { flex: none; }
 
 .odjel-header {
   display: flex;
@@ -1522,6 +1551,12 @@ main {
   margin: 12px 0;
 }
 
+:root[data-theme="dark"] .plocice-warning {
+  background: #33280f;
+  border-color: #574417;
+  color: #e9c37a;
+}
+
 .plocice-list {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -1555,6 +1590,9 @@ main {
 }
 .plocice-row:last-child { border-bottom: none; }
 .plocice-row.has-gap { border-left-color: #dd9a2c; background: #fdf8ee; }
+/* U tamnoj temi svijetla krem pozadina bi ostavila svijetli tekst na
+   svijetloj podlozi (nečitljivo) — ista poruka, tamni žuti ton. */
+:root[data-theme="dark"] .plocice-row.has-gap { background: #2b2313; }
 .plocice-row.is-editing { border-left-color: var(--primary); background: var(--primary-soft); }
 
 .col-radnik { flex: 1; min-width: 0; font-weight: 650; }
@@ -1584,8 +1622,40 @@ main {
 }
 .plocice-per-radnik-table td:first-child { font-weight: 650; }
 .plocice-per-radnik-table td:not(:first-child) { font-variant-numeric: tabular-nums; color: var(--text-soft); }
-.plocice-per-radnik-table tr:last-child td { border-bottom: none; }
-.col-actions { width: 56px; flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.plocice-per-radnik-table tbody tr:last-child td { border-bottom: none; }
+
+.plocice-per-radnik-table tfoot td {
+  border-top: 2px solid var(--border-strong);
+  border-bottom: none;
+  font-weight: 700;
+  color: var(--heading);
+  background: var(--surface-alt);
+}
+.plocice-per-radnik-table tfoot td:not(:first-child) { color: var(--heading); }
+.col-actions { width: 72px; flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
+
+/* Izmjena/brisanje radnika — vlastita klasa umjesto .task-del: veća meta za
+   prst, čitljivija u mirnom stanju, i ispravna boja pri prelasku mišem
+   (zelena za izmjenu, crvena samo za brisanje). */
+.row-action {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.row-action:hover { background: var(--primary-soft); color: var(--heading); }
+.row-action.is-delete { font-size: 19px; }
+.row-action.is-delete:hover { background: var(--danger-light); color: var(--danger); }
 
 .row-warn-icon { margin-left: 4px; cursor: help; }
 
@@ -1737,6 +1807,8 @@ main {
   background: #fffbfa;
 }
 
+:root[data-theme="dark"] .danger-zone { background: #2a1a18; }
+
 .danger-title {
   font-weight: 700;
   font-size: 14px;
@@ -1767,7 +1839,10 @@ main {
   /* Zaglavlje ostaje u jednom redu: tekst brenda se izostavlja, logo ostaje. */
   .topbar { padding: 6px 12px; gap: 10px; }
   .brand-text { display: none; }
-  .nav-tabs { flex: 1; justify-content: center; }
+  /* min-width:0 i na samoj traci (ne samo na dugmadima): kao flex stavka
+     zaglavlja ona se inače ne smanjuje ispod širine svog sadržaja, pa je na
+     vrlo uskim ekranima (~360px) virila nekoliko piksela van ekrana. */
+  .nav-tabs { flex: 1; min-width: 0; justify-content: center; }
   /* min-width:0 je nužan — flex stavke se po defaultu ne smanjuju ispod
      širine svog sadržaja (min-width:auto), pa bi četiri dugmeta (npr.
      "Godišnji pregled") gurala traku van ekrana bez ovoga. */
@@ -1813,28 +1888,43 @@ main {
   .col-date { width: 76px; order: 1; }
   .col-type { flex: 1; width: auto; min-width: 0; order: 2; }
   .col-chevron { order: 3; }
-  .col-extra {
+  /* Samo redovi (koji se prelamaju), NE i zaglavlje liste: zaglavlje je jedan
+     neprelomljivi red, pa bi mu puna širina + uvlaka virila izvan ekrana. */
+  .day-row .col-extra {
     order: 4;
-    flex: 0 0 100%;
-    width: 100%;
+    /* Uvučeno 90px (poravnato ispod vrste dana) — širina mora oduzeti tu
+       uvlaku, inače red viri izvan ekrana za tačno toliko. */
+    flex: 0 0 calc(100% - 90px);
+    width: calc(100% - 90px);
     margin-left: 90px;
     padding-right: 14px;
     font-size: 12.5px;
   }
+  .day-row .col-extra:empty { display: none; }
   .day-row .extra-detail { white-space: normal; }
   .day-list-scroll { max-height: 62vh; }
 
   /* Raspored pločica: zaglavlje liste se izostavlja (kolone su samoopisne
      zbog jedinica uz vrijednost), a red se prelama u dva reda. */
   .plocice-list-header { display: none; }
-  .plocice-row { flex-wrap: wrap; row-gap: 4px; padding: 10px 14px; }
+  .plocice-row { flex-wrap: wrap; row-gap: 4px; padding: 10px 8px 10px 14px; }
   .col-radnik { flex: 1 1 auto; order: 1; }
-  .col-actions { order: 2; }
+  /* Dugmad idu na sam desni kraj prvog reda (order 4), a ne između imena i
+     raspona — inače se lako promaši prstom i vizuelno lomi red. */
+  /* Dugmad na kraj reda (desni kraj druge linije), a ne između imena i
+     raspona — tako se ne lome brojevi i meta za prst je izdvojena. */
+  .col-actions { order: 4; width: auto; margin-left: auto; }
+  .row-action { width: 36px; height: 36px; }
   .col-raspon, .col-kolicina, .col-paketi, .col-datum {
     order: 3;
     width: auto;
     font-size: 12px;
   }
+
+  /* Deset kartica jedna ispod druge je previše skrolanja — dvije u redu. */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stat-card .stat-value { font-size: 19px; }
+  .stat-card .stat-label { font-size: 11.5px; }
   .odjel-header-actions { width: 100%; justify-content: space-between; }
 }
 
